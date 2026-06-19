@@ -3,418 +3,374 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>METANOIA Station Control</title>
+    <title>METANOIA.llc — Web Config</title>
     <style>
+        /* METANOIA Tkinter Palette Replicated */
         :root {
-            --bg-main: #0e0e0e;
-            --bg-card: #161616;
-            --bg-input: #1e1e1e;
-            --border-color: #2e2e2e;
-            --text-main: #e8e8e8;
-            --text-dim: #888888;
-            --primary: #ff8c00;      /* METANOIA Orange */
-            --primary-hover: #ffaa33;
-            --success: #4caf50;      /* Green */
-            --error: #f44336;        /* Red */
-            --accent: #00bcd4;       /* Cyan */
+            --bg: #0e0e0e;
+            --bg2: #161616;
+            --bg3: #1e1e1e;
+            --border: #2e2e2e;
+            --fg: #e8e8e8;
+            --fg-dim: #888888;
+            --orange: #ff8c00;
+            --orange2: #ffaa33;
+            --green: #4caf50;
+            --red: #f44336;
+            --cyan: #00bcd4;
+            --blue: #2a7fff;
         }
 
         body {
-            background-color: var(--bg-main);
-            color: var(--text-main);
+            background-color: var(--bg);
+            color: var(--fg);
             font-family: 'Courier New', Courier, monospace;
             margin: 0;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        header {
-            text-align: center;
-            border-bottom: 2px solid var(--primary);
-            padding-bottom: 10px;
-        }
-
-        header h1 {
-            color: var(--primary);
-            margin: 0;
-            font-size: 22px;
-            letter-spacing: 1px;
-        }
-
-        header p {
-            margin: 5px 0 0 0;
-            font-size: 12px;
-            color: var(--text-dim);
-        }
-
-        /* Top Connection Panel */
-        .conn-panel {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            padding: 12px;
-            border-radius: 6px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .status-badge {
-            font-weight: bold;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 13px;
-        }
-        .disconnected { background-color: rgba(244, 67, 54, 0.15); color: var(--error); border: 1px solid var(--error); }
-        .connected { background-color: rgba(76, 175, 80, 0.15); color: var(--success); border: 1px solid var(--success); }
-
-        /* Navigation Tabs */
-        .tab-bar {
-            display: flex;
-            border-bottom: 1px solid var(--border-color);
-            gap: 5px;
-        }
-
-        .tab-btn {
-            background: none;
-            border: 1px solid transparent;
-            color: var(--text-dim);
-            padding: 10px 15px;
-            font-family: inherit;
+            padding: 10px;
             font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            border-radius: 5px 5px 0 0;
-            margin-bottom: -1px;
         }
 
-        .tab-btn.active {
-            background-color: var(--bg-card);
-            border-color: var(--border-color) var(--border-color) var(--bg-card);
-            color: var(--primary);
-        }
+        /* Top Bar & Connection */
+        .header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+        .header h1 { color: var(--orange); margin: 0; font-size: 20px; }
+        .header span { color: var(--fg-dim); font-size: 13px; }
+        
+        .toolbar { background-color: var(--bg2); padding: 10px; border-radius: 4px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+        
+        /* Live Stats Strip */
+        .stats-strip { background-color: #111; padding: 10px; display: flex; gap: 20px; border-radius: 4px; margin-bottom: 15px; overflow-x: auto;}
+        .stat-box { display: flex; flex-direction: column; align-items: center; }
+        .stat-box .lbl { color: var(--fg-dim); font-size: 11px; font-weight: bold; }
+        .stat-box .val { font-size: 18px; font-weight: bold; }
+        .val.orange { color: var(--orange); } .val.green { color: var(--green); }
+        .val.cyan { color: var(--cyan); } .val.red { color: var(--red); } .val.fg { color: var(--fg); }
 
-        /* Tab Contents */
-        .tab-content {
-            display: none;
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-top: none;
-            padding: 15px;
-            border-radius: 0 0 6px 6px;
-            min-height: 350px;
-        }
-
+        /* Tabs */
+        .tab-bar { display: flex; border-bottom: 2px solid var(--bg2); gap: 2px; overflow-x: auto; }
+        .tab-btn { background-color: var(--bg3); color: var(--fg-dim); border: none; padding: 10px 15px; cursor: pointer; font-family: inherit; font-weight: bold; }
+        .tab-btn.active { background-color: var(--bg2); color: var(--orange); }
+        .tab-content { display: none; background-color: var(--bg2); padding: 15px; min-height: 400px; }
         .tab-content.active { display: block; }
 
-        /* Form Controls */
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 15px;
-            margin-bottom: 15px;
-        }
+        /* Form Elements */
+        .section-title { color: var(--orange); font-size: 15px; font-weight: bold; margin: 15px 0 10px 0; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
+        .form-row { display: flex; align-items: center; margin-bottom: 8px; }
+        .form-row label { width: 220px; color: var(--fg-dim); }
+        input { background-color: var(--bg3); color: var(--fg); border: 1px solid var(--border); padding: 6px; font-family: inherit; width: 250px; outline: none; }
+        input:focus { border-color: var(--orange); }
+        
+        button { font-family: inherit; font-weight: bold; padding: 6px 12px; cursor: pointer; border: none; border-radius: 3px; color: #000; }
+        button:disabled { background-color: #444 !important; color: #777 !important; cursor: not-allowed; }
+        .btn-blue { background-color: var(--blue); color: #fff;}
+        .btn-red { background-color: var(--red); color: #fff;}
+        .btn-orange { background-color: var(--orange); }
+        .btn-green { background-color: var(--green); }
 
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .input-group label {
-            font-size: 12px;
-            color: var(--text-dim);
-        }
-
-        input, select {
-            background-color: var(--bg-input);
-            color: var(--text-main);
-            border: 1px solid var(--border-color);
-            padding: 10px;
-            font-family: inherit;
-            border-radius: 4px;
-            font-size: 15px;
-        }
-
-        input:focus, select:focus {
-            border-color: var(--primary);
-            outline: none;
-        }
-
-        /* Action Buttons */
-        button.action-btn {
-            background-color: var(--primary);
-            color: var(--bg-main);
-            border: none;
-            padding: 12px;
-            font-family: inherit;
-            font-weight: bold;
-            font-size: 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            width: 100%;
-        }
-
-        button.action-btn:active { background-color: var(--primary-hover); }
-        button:disabled { background-color: #333 !important; color: #555 !important; cursor: not-allowed; }
-
-        /* Terminals and Monitors */
-        .monitor-box {
-            background-color: var(--bg-input);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            padding: 10px;
-            font-size: 13px;
-            height: 280px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-            word-break: break-all;
-        }
-
-        .fan-log { color: var(--accent); }
-        .system-log { color: var(--success); }
-
-        /* Grid for Live Battery Specs */
-        .metric-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .metric-card {
-            background-color: var(--bg-input);
-            border: 1px solid var(--border-color);
-            padding: 15px;
-            border-radius: 4px;
-            text-align: center;
-        }
-
-        .metric-card div:first-child { font-size: 11px; color: var(--text-dim); margin-bottom: 5px; }
-        .metric-card div:last-child { font-size: 20px; font-weight: bold; color: var(--primary); }
-
+        textarea { width: 100%; height: 150px; background-color: var(--bg3); color: var(--fg); border: 1px solid var(--border); font-family: inherit; padding: 8px; box-sizing: border-box; resize: vertical; }
+        .note { color: var(--fg-dim); font-size: 12px; margin-top: 4px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-    <header>
+    <div class="header">
         <h1>METANOIA.llc</h1>
-        <p>Firmware Configuration Ecosystem — Mobile Port</p>
-    </header>
-
-    <div class="conn-panel">
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <label style="font-size: 13px; color: var(--text-dim);">Baud:</label>
-            <select id="baudSelect">
-                <option value="9600" selected>9600</option>
-                <option value="115200">115200</option>
-            </select>
-        </div>
-        <div id="statusBadge" class="status-badge disconnected">DISCONNECTED</div>
-        <button id="btnConnect" style="background-color: var(--primary); color: #000; font-weight: bold; padding: 8px 12px; border: none; border-radius: 4px;">CONNECT</button>
+        <span>· Web UART Config</span>
     </div>
 
-    <div class="tab-bar">
-        <button class="tab-btn active" onclick="switchTab('hmi-tab', this)">HMI CONFIG</button>
-        <button class="tab-btn" onclick="switchTab('fan-tab', this)">FAN LOG</button>
-        <button class="tab-btn" onclick="switchTab('battery-tab', this)">BATTERY LIVE</button>
+    <div class="toolbar">
+        <select id="baud" style="background:var(--bg3); color:var(--fg); border:1px solid var(--border); padding:6px; font-family:inherit;">
+            <option value="115200" selected>115200</option>
+        </select>
+        <button id="btnConnect" class="btn-blue">⟳ Connect</button>
+        <button id="btnDisconnect" class="btn-red" disabled>✖ Disconnect</button>
+        <button id="btnSave" class="btn-orange" disabled>✔ Save All</button>
+        <button id="btnReboot" class="btn-red" disabled>⟲ Reboot</button>
+        <span id="statusLbl" style="margin-left:auto; color:var(--fg-dim);">⬤ Not connected</span>
     </div>
 
-    <div id="hmi-tab" class="tab-content active">
-        <div class="form-grid">
-            <div class="input-group">
-                <label>FAN ON TEMP (°C)</label>
-                <input type="number" id="fanOnTemp" value="48" min="0" max="100">
-            </div>
-            <div class="input-group">
-                <label>FAN OFF TEMP (°C)</label>
-                <input type="number" id="fanOffTemp" value="46" min="0" max="100">
-            </div>
-        </div>
-        <div class="form-grid">
-            <div class="input-group">
-                <label>SYS ADDR (HEX BYTE)</label>
-                <input type="text" id="sysAddr" value="AA" maxlength="2" style="text-transform: uppercase;">
-            </div>
-            <div class="input-group">
-                <label>MODE DESCRIPTOR</label>
-                <select id="modeSelect">
-                    <option value="01">01 - PERFORMANCE</option>
-                    <option value="02">02 - BALANCED / ECO</option>
-                </select>
-            </div>
-        </div>
-        <button id="btnWriteConfig" class="action-btn" disabled style="margin-top: 15px;">WRITE CONFIG TO STATION</button>
+    <div class="stats-strip">
+        <div class="stat-box"><span class="lbl">NODE</span><span id="st_node" class="val orange">–</span></div>
+        <div class="stat-box"><span class="lbl">SN</span><span id="st_sn" class="val fg">–</span></div>
+        <div class="stat-box"><span class="lbl">BAT</span><span id="st_bat" class="val green">–</span></div>
+        <div class="stat-box"><span class="lbl">TEMP</span><span id="st_temp" class="val cyan">–</span></div>
+        <div class="stat-box"><span class="lbl">FAN</span><span id="st_fan" class="val red">–</span></div>
+        <div class="stat-box"><span class="lbl">ST1</span><span id="st_s1" class="val fg">–</span></div>
+        <div class="stat-box"><span class="lbl">ST2</span><span id="st_s2" class="val fg">–</span></div>
     </div>
 
-    <div id="fan-tab" class="tab-content">
-        <div id="fanLogArea" class="monitor-box fan-log">[SYSTEM] Awaiting FTDI physical serial hookup...</div>
+    <div class="tab-bar" id="tabs">
+        <button class="tab-btn active" onclick="openTab('tab-id')">🔒 Identity</button>
+        <button class="tab-btn" onclick="openTab('tab-wifi')">📡 WiFi</button>
+        <button class="tab-btn" onclick="openTab('tab-email')">📧 Email</button>
+        <button class="tab-btn" onclick="openTab('tab-bat')">🔋 Battery</button>
+        <button class="tab-btn" onclick="openTab('tab-sns')">📊 Sensors</button>
+        <button class="tab-btn" onclick="openTab('tab-fan')">🌡 Fan</button>
+        <button class="tab-btn" onclick="openTab('tab-hmi')">🖥 HMI</button>
+        <button class="tab-btn" onclick="openTab('tab-log')">📋 Log</button>
     </div>
 
-    <div id="battery-tab" class="tab-content">
-        <div class="metric-grid">
-            <div class="metric-card">
-                <div>CELL VOLTAGE</div>
-                <div id="lblVoltage">0.00 V</div>
-            </div>
-            <div class="metric-card">
-                <div>CURRENT STATE</div>
-                <div id="lblStatus">STANDBY</div>
-            </div>
+    <div id="tab-id" class="tab-content active">
+        <div class="section-title">Station Identity</div>
+        <div class="form-row"><label>Station Name</label><input type="text" id="node_name" class="nvs-val"></div>
+        <div class="form-row"><label>Serial Number</label><input type="text" id="serial_num" class="nvs-val"></div>
+        <div class="note">★ Serial number is editable — useful for inventory tracking.</div>
+    </div>
+
+    <div id="tab-wifi" class="tab-content">
+        <div class="section-title">WiFi Credentials</div>
+        <div class="form-row"><label>SSID</label><input type="text" id="wifi_ssid" class="nvs-val"></div>
+        <div class="form-row"><label>Password</label><input type="password" id="wifi_pass" class="nvs-val"></div>
+        <div class="note">★ Save WiFi changes then Reboot.</div>
+    </div>
+
+    <div id="tab-email" class="tab-content">
+        <div class="section-title">SMTP Settings</div>
+        <div class="form-row"><label>SMTP Host</label><input type="text" id="smtp_host" class="nvs-val"></div>
+        <div class="form-row"><label>SMTP Port</label><input type="text" id="smtp_port" class="nvs-val"></div>
+        <div class="form-row"><label>Sender Email</label><input type="text" id="author_email" class="nvs-val"></div>
+        <div class="form-row"><label>Sender App-Pass</label><input type="password" id="author_pass" class="nvs-val"></div>
+        <div class="form-row"><label>Recipient Email</label><input type="text" id="recip_email" class="nvs-val"></div>
+        
+        <div class="section-title">Test Email</div>
+        <button id="btnTestEmail" class="btn-blue" disabled>✉ Send Test Email</button>
+        <span id="emailStatus" style="color:var(--green); margin-left:10px;"></span>
+    </div>
+
+    <div id="tab-bat" class="tab-content">
+        <div class="section-title">Battery Monitoring</div>
+        <div class="form-row"><label>Voltage Divider Ratio</label><input type="text" id="bat_ratio" class="nvs-val"></div>
+        <div class="form-row"><label>Low Voltage Threshold (V)</label><input type="text" id="bat_low_v" class="nvs-val"></div>
+        <div class="form-row"><label>Check Interval (ms)</label><input type="text" id="bat_check_ms" class="nvs-val"></div>
+        <div class="note">★ Default ratio 13.95 for 110 kΩ + 9.1 kΩ divider.</div>
+    </div>
+
+    <div id="tab-sns" class="tab-content">
+        <div class="section-title">Ultrasonic Settings</div>
+        <div class="form-row"><label>Trigger Pulse (µs)</label><input type="text" id="trig_us" class="nvs-val"></div>
+        <div class="form-row"><label>Empty Distance (cm)</label><input type="text" id="dist_empty_cm" class="nvs-val"></div>
+        <div class="form-row"><label>Confirm Readings</label><input type="text" id="confirm_rdgs" class="nvs-val"></div>
+        <div class="form-row"><label>Sensor Period (ms)</label><input type="text" id="sensor_period_ms" class="nvs-val"></div>
+        <div class="form-row"><label>Watchdog Timeout (ms)</label><input type="text" id="watchdog_ms" class="nvs-val"></div>
+    </div>
+
+    <div id="tab-fan" class="tab-content">
+        <div class="section-title">Fan Control — IO13</div>
+        <div class="form-row"><label>Fan ON Temp (°C)</label><input type="text" id="fan_on_temp" class="nvs-val"></div>
+        <div class="form-row"><label>Fan OFF Temp (°C)</label><input type="text" id="fan_off_temp" class="nvs-val"></div>
+        <div class="form-row"><label>Temp Offset (°C)</label><input type="text" id="temp_offset" class="nvs-val"></div>
+        
+        <div class="section-title">Fan Decision Log</div>
+        <textarea id="fanLogArea" readonly></textarea>
+    </div>
+
+    <div id="tab-hmi" class="tab-content">
+        <div class="section-title">Local UART HMI Settings (Hex Codes)</div>
+        <div class="form-row"><label>Bin 1 UP</label><input type="text" id="hmi_up1" class="nvs-val"></div>
+        <div class="form-row"><label>Bin 1 DOWN</label><input type="text" id="hmi_dn1" class="nvs-val"></div>
+        <div class="form-row"><label>Bin 2 UP</label><input type="text" id="hmi_up2" class="nvs-val"></div>
+        <div class="form-row"><label>Bin 2 DOWN</label><input type="text" id="hmi_dn2" class="nvs-val"></div>
+        <div class="form-row"><label>Sensor Request</label><input type="text" id="hmi_req" class="nvs-val"></div>
+        <div class="form-row"><label>Packet Head Byte</label><input type="text" id="hmi_head" class="nvs-val"></div>
+        <div class="form-row"><label>Packet Tail Byte</label><input type="text" id="hmi_tail" class="nvs-val"></div>
+    </div>
+
+    <div id="tab-log" class="tab-content">
+        <div class="section-title">Maintenance Log</div>
+        <textarea id="maintLogArea" readonly style="margin-bottom:10px;"></textarea>
+        <div class="form-row">
+            <input type="text" id="newLogEntry" placeholder="Type new log entry..." style="width: 60%; margin-right: 10px;">
+            <button id="btnAppendLog" class="btn-green" disabled>➕ Append</button>
+            <button id="btnRefreshLog" class="btn-blue" disabled style="margin-left:10px;">⟳ Refresh</button>
         </div>
-        <label style="font-size: 11px; color: var(--text-dim); display: block; margin-bottom: 5px;">RAW DATASTREAM OUT:</label>
-        <div id="sysLogArea" class="monitor-box system-log"></div>
     </div>
 
     <script>
+        // UI Logic
+        function openTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Serial Protocol State
         let port;
         let reader;
-        let keepReading = true;
+        let writer;
+        let keepReading = false;
+        let readBuffer = "";
+        let pollInterval;
 
-        // UI Target Elements
-        const btnConnect = document.getElementById('btnConnect');
-        const statusBadge = document.getElementById('statusBadge');
-        const btnWriteConfig = document.getElementById('btnWriteConfig');
-        const fanLogArea = document.getElementById('fanLogArea');
-        const sysLogArea = document.getElementById('sysLogArea');
-        const baudSelect = document.getElementById('baudSelect');
+        const uiElements = {
+            btnConnect: document.getElementById('btnConnect'),
+            btnDisconnect: document.getElementById('btnDisconnect'),
+            btnSave: document.getElementById('btnSave'),
+            btnReboot: document.getElementById('btnReboot'),
+            btnTestEmail: document.getElementById('btnTestEmail'),
+            btnAppendLog: document.getElementById('btnAppendLog'),
+            btnRefreshLog: document.getElementById('btnRefreshLog'),
+            statusLbl: document.getElementById('statusLbl')
+        };
 
-        // Tab Switching Logic
-        function switchTab(tabId, element) {
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            element.classList.add('active');
+        function setStatus(msg, color) {
+            uiElements.statusLbl.textContent = msg;
+            uiElements.statusLbl.style.color = color;
         }
 
-        // Connection Execution Block
-        btnConnect.addEventListener('click', async () => {
-            if (port) {
-                // Graceful Disconnect Execution
-                keepReading = false;
-                if (reader) { await reader.cancel(); }
-                await port.close();
-                port = null;
-                updateUIState(false);
-                return;
-            }
+        function toggleControls(connected) {
+            uiElements.btnConnect.disabled = connected;
+            uiElements.btnDisconnect.disabled = !connected;
+            uiElements.btnSave.disabled = !connected;
+            uiElements.btnReboot.disabled = !connected;
+            uiElements.btnTestEmail.disabled = !connected;
+            uiElements.btnAppendLog.disabled = !connected;
+            uiElements.btnRefreshLog.disabled = !connected;
+        }
 
+        // --- USB SERIAL LOGIC ---
+        uiElements.btnConnect.addEventListener('click', async () => {
             try {
-                // Request port selection through Web Serial API
                 port = await navigator.serial.requestPort();
-                const baudRate = parseInt(baudSelect.value);
+                await port.open({ baudRate: parseInt(document.getElementById('baud').value) });
                 
-                await port.open({ baudRate: baudRate });
-                
-                updateUIState(true);
-                keepReading = true;
-                readSerialStream();
+                // Allow ESP32 DTR Reset time
+                setStatus("⬤ Booting...", "var(--orange)");
+                await new Promise(r => setTimeout(r, 1500)); 
 
+                writer = port.writable.getWriter();
+                keepReading = true;
+                readLoop(); // Start background JSON parser
+
+                // Initiate Connection handshake
+                await sendJson({ cmd: "connect" });
+                
             } catch (err) {
-                // Intercept execution cancellations or permission deadlocks
-                if (err.name === 'NotFoundError') {
-                    alert("Connection Denied:\nNo device selected. If the popup list was empty, ensure 'OTG Connection' is enabled inside your phone's system settings.");
-                } else {
-                    alert(`System Interface Error: ${err.message}`);
-                }
-                updateUIState(false);
+                setStatus("✖ Connection Error", "var(--red)");
+                console.error(err);
             }
         });
 
-        function updateUIState(isConnected) {
-            if (isConnected) {
-                statusBadge.textContent = "CONNECTED";
-                statusBadge.className = "status-badge connected";
-                btnConnect.textContent = "DISCONNECT";
-                btnWriteConfig.disabled = false;
-                fanLogArea.textContent = `[${new Date().toLocaleTimeString()}] Dynamic monitoring channel linked.\n`;
-            } else {
-                statusBadge.textContent = "DISCONNECTED";
-                statusBadge.className = "status-badge disconnected";
-                btnConnect.textContent = "CONNECT";
-                btnWriteConfig.disabled = true;
+        uiElements.btnDisconnect.addEventListener('click', async () => {
+            if (writer) {
+                await sendJson({ cmd: "disconnect" });
+                writer.releaseLock();
             }
+            keepReading = false;
+            if (reader) await reader.cancel();
+            if (port) await port.close();
+            
+            clearInterval(pollInterval);
+            toggleControls(false);
+            setStatus("⬤ Disconnected", "var(--fg-dim)");
+        });
+
+        async function sendJson(obj) {
+            if (!writer) return;
+            const payload = JSON.stringify(obj) + "\n";
+            await writer.write(new TextEncoder().encode(payload));
         }
 
-        // Configuration Byte Framing Execution
-        btnWriteConfig.addEventListener('click', async () => {
-            if (!port || !port.writable) return;
-
-            const fanOn = parseInt(document.getElementById('fanOnTemp').value) || 48;
-            const fanOff = parseInt(document.getElementById('fanOffTemp').value) || 46;
-            const addr = document.getElementById('sysAddr').value || "AA";
-            const mode = document.getElementById('modeSelect').value;
-
-            // Framework framing matching your local custom protocol: [Header, Addr, Mode, FanOn, FanOff, Newline]
-            const payload = `$CFG,${addr},${mode},${fanOn},${fanOff}\r\n`;
-            
-            const encoder = new TextEncoder();
-            const writer = port.writable.getWriter();
-            await writer.write(encoder.encode(payload));
-            writer.releaseLock();
-
-            sysLogArea.textContent += `[TX COMPLETED]: ${payload}`;
-            sysLogArea.scrollTop = sysLogArea.scrollHeight;
-        });
-
-        // Background Parser Stream for Incoming Hardware Strings
-        async function readSerialStream() {
+        // Stream Parser: Buffers raw chars, splits by \n, parses JSON.
+        async function readLoop() {
             const decoder = new TextDecoderStream();
-            const inputDone = port.readable.pipeTo(decoder.writable);
-            const inputStream = decoder.readable;
-            reader = inputStream.getReader();
-
-            let buffer = "";
+            port.readable.pipeTo(decoder.writable);
+            reader = decoder.readable.getReader();
 
             try {
                 while (keepReading) {
                     const { value, done } = await reader.read();
                     if (done) break;
                     if (value) {
-                        buffer += value;
-                        let lines = buffer.split("\n");
-                        buffer = lines.pop(); // Keep partial trailing lines inside buffer
+                        readBuffer += value;
+                        let lines = readBuffer.split('\n');
+                        readBuffer = lines.pop(); // Keep incomplete chunk
 
                         for (let line of lines) {
-                            line = line.trim();
-                            if (!line) continue;
-
-                            // Echo line directly to raw console data feed
-                            sysLogArea.textContent += `[RX]: ${line}\n`;
-                            sysLogArea.scrollTop = sysLogArea.scrollHeight;
-
-                            // Handle Custom Parsers mirroring the original desktop logic
-                            processIncomingTelemetry(line);
+                            if (!line.trim()) continue;
+                            try {
+                                const data = JSON.parse(line.trim());
+                                handleStationResponse(data);
+                            } catch (e) {
+                                console.warn("Non-JSON received:", line);
+                            }
                         }
                     }
                 }
-            } catch (err) {
-                sysLogArea.textContent += `[STREAM CORRUPTED]: ${err.message}\n`;
+            } catch (e) {
+                console.error("Read error:", e);
             } finally {
                 reader.releaseLock();
             }
         }
 
-        function processIncomingTelemetry(line) {
-            const timestamp = new Date().toLocaleTimeString();
-            
-            // Example custom parser logic looking for telemetry lines
-            if (line.includes("TEMP") || line.includes("FAN")) {
-                fanLogArea.textContent = `[${timestamp}] ${line}\n` + fanLogArea.textContent;
+        // --- RESPONSE ROUTER ---
+        function handleStationResponse(data) {
+            // 1. Connection success
+            if (data.cmd === "connect" && data.ok) {
+                setStatus("⬤ Connected", "var(--green)");
+                toggleControls(true);
+                sendJson({ cmd: "get_settings" }); // fetch NVS
+                sendJson({ cmd: "get_log" });
+                pollInterval = setInterval(() => sendJson({ cmd: "status" }), 2000); // Start live poll
             }
             
-            if (line.includes("VOLT") || line.startsWith("$BATT")) {
-                // Example pattern parse: $BATT,3.82,CHARGING
-                const tokens = line.split(',');
-                if(tokens.length >= 3) {
-                    document.getElementById('lblVoltage').textContent = `${tokens[1]} V`;
-                    document.getElementById('lblStatus').textContent = tokens[2].toUpperCase();
-                }
+            // 2. Settings Load
+            if (data.cmd === "get_settings" || data.node_name) {
+                // Populate all inputs that match JSON keys
+                document.querySelectorAll('.nvs-val').forEach(input => {
+                    if (data[input.id] !== undefined) {
+                        input.value = data[input.id];
+                    }
+                });
+                document.getElementById('st_node').textContent = data.node_name || "–";
+                document.getElementById('st_sn').textContent = data.serial_num || "–";
             }
+
+            // 3. Live Polling (Status)
+            if (data.bat_v !== undefined) {
+                document.getElementById('st_bat').textContent = parseFloat(data.bat_v).toFixed(2) + " V";
+                document.getElementById('st_temp').textContent = parseFloat(data.chip_temp).toFixed(1) + "°C";
+                document.getElementById('st_fan').textContent = data.fan_on ? "ON" : "OFF";
+                document.getElementById('st_s1').textContent = data.s1_pct !== undefined ? data.s1_pct + "%" : "–";
+                document.getElementById('st_s2').textContent = data.s2_pct !== undefined ? data.s2_pct + "%" : "–";
+            }
+
+            // 4. Maint Log Fetch
+            if (data.log !== undefined) {
+                document.getElementById('maintLogArea').value = data.log || "(no entries)";
+            }
+
+            // 5. Success Notifications
+            if (data.cmd === "set_settings" && data.ok) setStatus("✔ Settings Saved!", "var(--orange)");
+            if (data.cmd === "test_email" && data.ok) document.getElementById('emailStatus').textContent = "✔ Sent!";
+            if (data.cmd === "append_log" && data.ok) { document.getElementById('newLogEntry').value = ""; sendJson({ cmd: "get_log" }); }
         }
+
+        // --- BUTTON ACTIONS ---
+        uiElements.btnSave.addEventListener('click', () => {
+            let payload = {};
+            document.querySelectorAll('.nvs-val').forEach(input => { payload[input.id] = input.value; });
+            sendJson({ cmd: "set_settings", payload: payload });
+        });
+
+        uiElements.btnReboot.addEventListener('click', () => {
+            if(confirm("Reboot the station now?")) sendJson({ cmd: "reboot" });
+        });
+
+        uiElements.btnTestEmail.addEventListener('click', () => {
+            document.getElementById('emailStatus').textContent = "Sending...";
+            sendJson({ cmd: "test_email" });
+        });
+
+        uiElements.btnAppendLog.addEventListener('click', () => {
+            const entry = document.getElementById('newLogEntry').value;
+            if(!entry) return;
+            const ts = new Date().toISOString().replace('T', ' ').slice(0, 16);
+            sendJson({ cmd: "append_log", entry: `[${ts}] ${entry}` });
+        });
+
+        uiElements.btnRefreshLog.addEventListener('click', () => sendJson({ cmd: "get_log" }));
+
     </script>
 </body>
 </html>
