@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hardware Bypass Test</title>
+    <style>
+        body { background: #0e0e0e; color: #e8e8e8; font-family: monospace; padding: 20px; }
+        button { background: #ff8c00; padding: 15px; border: none; font-weight: bold; width: 100%; margin-bottom: 10px; cursor: pointer; }
+        #log { background: #1e1e1e; padding: 10px; height: 300px; overflow-y: scroll; border: 1px solid #ff8c00; white-space: pre-wrap;}
+    </style>
+</head>
+<body>
+    <h2>METANOIA USB Diagnostics</h2>
+    
+    <button onclick="testWebSerial()">1. TEST WEB SERIAL (Standard)</button>
+    <button onclick="testWebUSB()">2. TEST RAW WEBUSB (Bypass)</button>
+    <button onclick="navigator.usb.getDevices().then(d => log('Authorized Devices: ' + d.length))">3. CHECK AUTHORIZATIONS</button>
+
+    <div id="log">Waiting for hardware...</div>
+
+    <script>
+        function log(msg) {
+            document.getElementById('log').innerHTML += '\n[' + new Date().toLocaleTimeString() + '] ' + msg;
+        }
+
+        // Test 1: The standard way we've been trying
+        async function testWebSerial() {
+            try {
+                log("Requesting Web Serial port...");
+                const port = await navigator.serial.requestPort();
+                log("SUCCESS! Serial Port selected.");
+            } catch (e) {
+                log("SERIAL FAIL: " + e.message);
+            }
+        }
+
+        // Test 2: The raw USB bypass
+        async function testWebUSB() {
+            try {
+                log("Requesting Raw WebUSB device (FTDI ID 0x0403)...");
+                const device = await navigator.usb.requestDevice({ 
+                    filters: [{ vendorId: 0x0403 }] // Force FTDI search
+                });
+                log("SUCCESS! Raw USB device found: " + device.productName + " (" + device.manufacturerName + ")");
+                log("Device Class: " + device.deviceClass);
+            } catch (e) {
+                log("USB FAIL: " + e.message);
+            }
+        }
+    </script>
+</body>
+</html>
