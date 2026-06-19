@@ -203,9 +203,9 @@
             }
 
             async connect() {
-                this.device = await navigator.usb.requestDevice({
-                    filters: [{ vendorId: 0x0403 }]
-                });
+this.device = await navigator.usb.requestDevice({
+    filters: [] 
+});
 
                 await this.device.open();
                 
