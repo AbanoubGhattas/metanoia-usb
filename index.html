@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>METANOIA USB Config</title>
+    <style>
+        /* METANOIA Dark Theme Palette */
+        body {
+            background-color: #0e0e0e;
+            color: #e8e8e8;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        h2 {
+            color: #ff8c00; /* ORANGE */
+            margin: 0;
+            text-align: center;
+        }
+        .control-panel {
+            background-color: #161616;
+            border: 1px solid #2e2e2e;
+            padding: 15px;
+            border-radius: 5px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: space-between;
+        }
+        button {
+            background-color: #ff8c00;
+            color: #0e0e0e;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        button:active { background-color: #ffaa33; }
+        button:disabled { background-color: #555; color: #222; cursor: not-allowed; }
+        
+        select, input {
+            background-color: #1e1e1e;
+            color: #e8e8e8;
+            border: 1px solid #2e2e2e;
+            padding: 10px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 16px;
+        }
+        
+        #log {
+            width: 100%;
+            height: 300px;
+            background-color: #1e1e1e;
+            color: #4caf50; /* GREEN for incoming text */
+            border: 1px solid #2e2e2e;
+            padding: 10px;
+            box-sizing: border-box;
+            resize: vertical;
+            overflow-y: auto;
+        }
+        .status-disconnected { color: #f44336; font-weight: bold; } /* RED */
+        .status-connected { color: #4caf50; font-weight: bold; } /* GREEN */
+    </style>
+</head>
+<body>
+
+    <h2>METANOIA.llc - Web USB</h2>
+
+    <div class="control-panel">
+        <div>
+            <label for="baud">Baud:</label>
+            <select id="baud">
+                <option value="9600" selected>9600</option>
+                <option value="19200">19200</option>
+                <option value="115200">115200</option>
+            </select>
+        </div>
+        <span id="status" class="status-disconnected">DISCONNECTED</span>
+        <button id="btnConnect">CONNECT FTDI</button>
+        <button id="btnDisconnect" disabled>DISCONNECT</button>
+    </div>
+
+    <div class="control-panel">
+        <input type="text" id="cmdInput" placeholder="Enter hex or text command..." style="flex-grow: 1;">
+        <button id="btnSend" disabled>SEND</button>
+    </div>
+
+    <label for="log"><strong>Serial Log:</strong></label>
+    <textarea id="log" readonly></textarea>
+
+    <script>
+        let port;
+        let reader;
+        let inputDone;
+        let outputDone;
+        let inputStream;
+        let outputStream;
+
+        const btnConnect = document.getElementById('btnConnect');
+        const btnDisconnect = document.getElementById('btnDisconnect');
+        const btnSend = document.getElementById('btnSend');
+        const statusSpan = document.getElementById('status');
+        const logArea = document.getElementById('log');
+        const cmdInput = document.getElementById('cmdInput');
+        const baudSelect = document.getElementById('baud');
+
+        // Check if browser supports Web Serial
+        if (!("serial" in navigator)) {
+            alert("Web Serial API not supported in this browser. Please use Chrome for Android.");
+            btnConnect.disabled = true;
+        }
+
+        function log(msg, color = "#e8e8e8") {
+            logArea.value += msg + "\n";
+            logArea.scrollTop = logArea.scrollHeight; // Auto-scroll
+        }
+
+        btnConnect.addEventListener('click', async () => {
+            try {
+                // Prompt user to select the FTDI USB device
+                port = await navigator.serial.requestPort();
+                
+                // Open the connection
+                const baudRate = parseInt(baudSelect.value);
+                await port.open({ baudRate: baudRate });
+
+                // Set up UI
+                statusSpan.textContent = "CONNECTED";
+                statusSpan.className = "status-connected";
+                btnConnect.disabled = true;
+                btnDisconnect.disabled = false;
+                btnSend.disabled = false;
+                log(`[SYSTEM] Connected to FTDI at ${baudRate} baud.`);
+
+                // Start reading data
+                readLoop();
+
+            } catch (err) {
+                log(`[ERROR] Connection failed: ${err.message}`, "#f44336");
+            }
+        });
+
+        btnDisconnect.addEventListener('click', async () => {
+            if (reader) {
+                await reader.cancel();
+            }
+            if (port) {
+                await port.close();
+            }
+            
+            statusSpan.textContent = "DISCONNECTED";
+            statusSpan.className = "status-disconnected";
+            btnConnect.disabled = false;
+            btnDisconnect.disabled = true;
+            btnSend.disabled = true;
+            log("[SYSTEM] Disconnected.");
+        });
+
+        btnSend.addEventListener('click', async () => {
+            if (!port) return;
+            const text = cmdInput.value;
+            if (!text) return;
+
+            const encoder = new TextEncoder();
+            const writer = port.writable.getWriter();
+            
+            // Append newline if your station expects it, remove if not
+            await writer.write(encoder.encode(text + "\r\n")); 
+            writer.releaseLock();
+            
+            log(`[TX] ${text}`);
+            cmdInput.value = ""; // clear input
+        });
+
+        async function readLoop() {
+            const decoder = new TextDecoderStream();
+            inputDone = port.readable.pipeTo(decoder.writable);
+            inputStream = decoder.readable;
+            reader = inputStream.getReader();
+
+            try {
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (value) {
+                        // value is a string from the TextDecoder
+                        logArea.value += value;
+                        logArea.scrollTop = logArea.scrollHeight;
+                    }
+                    if (done) {
+                        break;
+                    }
+                }
+            } catch (error) {
+                log(`[ERROR] Read error: ${error}`, "#f44336");
+            } finally {
+                reader.releaseLock();
+            }
+        }
+    </script>
+</body>
+</html>
