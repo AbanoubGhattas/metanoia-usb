@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>METANOIA Mobile Pro (WebUSB)</title>
+    <title>METANOIA Mobile Pro (WebUSB 3-Wire)</title>
     <style>
         :root {
             --bg: #0a0a0a; --bg-card: #141414; --bg-input: #1f1f1f;
@@ -19,7 +19,6 @@
             margin: 0; padding: 0; padding-bottom: 90px;
         }
 
-        /* Top Header */
         .header {
             background-color: var(--bg-card); padding: 15px 20px;
             border-bottom: 1px solid var(--orange);
@@ -30,7 +29,6 @@
         .status-dot { width: 12px; height: 12px; border-radius: 50%; background-color: var(--text-dim); }
         .status-dot.connected { background-color: var(--green); box-shadow: 0 0 8px var(--green); }
 
-        /* Dashboard & Global Actions */
         .card { background-color: var(--bg-card); margin: 12px; border-radius: 8px; padding: 15px; border: 1px solid var(--border); }
         .btn {
             width: 100%; padding: 14px; border: none; border-radius: 6px; font-size: 15px; font-weight: bold;
@@ -45,14 +43,12 @@
         .action-row { display: flex; gap: 10px; }
         .action-row .btn { margin-bottom: 0; }
 
-        /* Live Stats Grid */
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
         .stat-box { background: var(--bg-input); padding: 10px 5px; border-radius: 6px; text-align: center; }
         .stat-lbl { font-size: 10px; color: var(--text-dim); font-weight: bold; display: block; margin-bottom: 4px; }
         .stat-val { font-size: 14px; font-weight: bold; }
         .v-green { color: var(--green); } .v-cyan { color: var(--cyan); } .v-red { color: var(--red); } .v-orange { color: var(--orange); }
 
-        /* Form Inputs */
         .section-title { color: var(--orange); font-size: 16px; margin: 0 0 15px 0; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
         .form-group { margin-bottom: 12px; }
         .form-group label { display: block; color: var(--text-dim); font-size: 12px; margin-bottom: 4px; font-weight: bold; }
@@ -64,12 +60,10 @@
         input:focus { border-color: var(--orange); outline: none; }
         textarea { width: 100%; height: 180px; background: var(--bg-input); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-family: inherit; font-size: 13px; resize: vertical; }
 
-        /* Tab Content */
         .tab-content { display: none; }
         .tab-content.active { display: block; animation: fadeIn 0.2s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* Bottom Scrollable Navigation */
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; width: 100%; background-color: var(--bg-card);
             border-top: 1px solid var(--border); display: flex; overflow-x: auto;
@@ -161,7 +155,8 @@
     </div>
 
     <div class="card tab-content" id="tab-log">
-        <h3 class="section-title">Maintenance Log</h3>
+        <h3 class="section-title">System & Maint Log</h3>
+        <div style="font-size: 11px; color: var(--orange); margin-bottom: 5px;">Raw ESP32 Stream Output:</div>
         <textarea id="maintLogArea" readonly></textarea>
         <div class="form-group" style="margin-top:10px;">
             <input type="text" id="newLogEntry" placeholder="Type new log entry...">
@@ -182,7 +177,6 @@
     </div>
 
     <script>
-        // --- 1. Tab Navigation Logic ---
         function switchTab(tabId, el) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -191,7 +185,7 @@
             el.scrollIntoView({ behavior: 'smooth', inline: 'center' });
         }
 
-        // --- 2. Custom Native WebUSB FTDI Driver (ESP32 Fixed Memory Edition) ---
+        // --- Pure 3-Wire WebUSB FTDI Driver ---
         class WebUsbFtdiDriver {
             constructor() {
                 this.device = null;
@@ -223,35 +217,16 @@
 
                 await this.device.claimInterface(this.interfaceNumber);
 
-                // Initialize FTDI
-                await this.device.controlTransferOut({ requestType: 'vendor', recipient: 'device', request: 0x00, value: 0x00, index: this.interfaceNumber }); // Reset
-                await this.device.controlTransferOut({ requestType: 'vendor', recipient: 'device', request: 0x01, value: 0x001A, index: 0x0000 }); // 115200 Baud
-                await this.device.controlTransferOut({ requestType: 'vendor', recipient: 'device', request: 0x02, value: 0x0008, index: this.interfaceNumber }); // 8-N-1
-                await this.device.controlTransferOut({ requestType: 'vendor', recipient: 'device', request: 0x04, value: 0x0000, index: this.interfaceNumber }); // Flow Control Off
-
-                // Precise Cross-Coupled Transistor Sequence to Trigger ESP32 Boot
-                await this.setModemControl(true, false);  // DTR Low, RTS High -> Asserts Reset Pin
-                await new Promise(r => setTimeout(r, 150));
-                await this.setModemControl(false, true);  // DTR High, RTS Low -> Releases Reset, Sets Boot Pin
-                await new Promise(r => setTimeout(r, 150));
-                await this.setModemControl(false, false); // Both released -> Executes application
-                await new Promise(r => setTimeout(r, 400)); // Allow ESP32 crystal oscillation to stabilize
+                // PURE 3-WIRE INITIALIZATION (No DTR/RTS)
+                await this.device.controlTransferOut({ requestType: 'vendor', recipient: 'device', request: 0x00, value: 0x00, index: this.interfaceNumber }); 
+                await this.device.controlTransferOut({ requestType: 'vendor', recipient: 'device', request: 0x01, value: 0x001A, index: 0x0000 }); 
+                await this.device.controlTransferOut({ requestType: 'vendor', recipient: 'device', request: 0x02, value: 0x0008, index: this.interfaceNumber }); 
+                await this.device.controlTransferOut({ requestType: 'vendor', recipient: 'device', request: 0x04, value: 0x0000, index: this.interfaceNumber }); 
 
                 this.readLoopActive = true;
                 this.startReadLoop();
                 
-                return this.device.productName || "FTDI COM Link";
-            }
-
-            async setModemControl(dtr, rts) {
-                let value = 0x0000;
-                if (dtr) value |= 0x0101; else value |= 0x0100;
-                if (rts) value |= 0x0202; else value |= 0x0200;
-                
-                await this.device.controlTransferOut({
-                    requestType: 'vendor', recipient: 'device',
-                    request: 0x01, value: value, index: this.interfaceNumber
-                });
+                return this.device.productName || "FTDI 3-Wire Link";
             }
 
             async startReadLoop() {
@@ -263,7 +238,6 @@
                         const result = await this.device.transferIn(this.endpointIn, 64);
                         
                         if (result.status === 'ok' && result.data.byteLength > 2) {
-                            // FIX: Slice explicitly bound to byteOffset and packet byteLength to exclude garbage unallocated system memory
                             const dataBytes = new Uint8Array(
                                 result.data.buffer, 
                                 result.data.byteOffset + 2, 
@@ -307,7 +281,6 @@
             }
         }
 
-        // --- 3. UI Wiring & Logic ---
         const ftdi = new WebUsbFtdiDriver();
         let pollInt;
 
@@ -319,7 +292,8 @@
             btnTestEmail: document.getElementById('btnTestEmail'),
             btnAppendLog: document.getElementById('btnAppendLog'),
             btnRefreshLog: document.getElementById('btnRefreshLog'),
-            statusDot: document.getElementById('statusDot')
+            statusDot: document.getElementById('statusDot'),
+            logArea: document.getElementById('maintLogArea')
         };
 
         function setConnected(state) {
@@ -333,8 +307,10 @@
             if(state) ui.statusDot.classList.add('connected'); else ui.statusDot.classList.remove('connected');
         }
 
-        // Parse cleaned stream tokens
         ftdi.onDataCallback = (rawJsonString) => {
+            ui.logArea.value += "> " + rawJsonString + "\n";
+            ui.logArea.scrollTop = ui.logArea.scrollHeight;
+
             try {
                 const data = JSON.parse(rawJsonString);
 
@@ -359,23 +335,28 @@
                     document.getElementById('st_fan').textContent = data.fan_on ? "ON" : "OFF";
                 }
                 
-                if (data.log !== undefined) document.getElementById('maintLogArea').value = data.log || "(no entries)";
+                if (data.log !== undefined) {
+                    ui.logArea.value += "\n--- STORED LOG ---\n" + data.log + "\n------------------\n";
+                    ui.logArea.scrollTop = ui.logArea.scrollHeight;
+                }
+                
                 if (data.cmd === "set_settings" && data.ok) alert("Settings Saved to Station!");
                 if (data.cmd === "test_email" && data.ok) alert("Test email queued successfully.");
 
             } catch (e) {
-                // Skips raw startup strings or fragmented bytes gracefully
             }
         };
 
         ui.btnConnect.addEventListener('click', async () => {
             try {
+                ui.logArea.value = "Initializing FTDI...\n";
                 const identifier = await ftdi.connect();
-                console.log("Hardware target reached: " + identifier);
-                // Trigger handshake frame immediately following stable execution
+                ui.logArea.value += "Hardware reached: " + identifier + "\nWaiting for stream...\n";
+                
+                // Immediately send handshake since ESP is already running in 3-wire
                 ftdi.sendJson({ cmd: "connect" }); 
             } catch (err) {
-                alert("Connection Failed. If physical connection exists, verify OTG settings. Error: " + err.message);
+                ui.logArea.value += "\nERROR: " + err.message;
             }
         });
 
@@ -384,6 +365,7 @@
             await ftdi.disconnect();
             if(pollInt) clearInterval(pollInt); 
             setConnected(false);
+            ui.logArea.value += "\nDisconnected.\n";
         });
 
         ui.btnSave.addEventListener('click', () => {
