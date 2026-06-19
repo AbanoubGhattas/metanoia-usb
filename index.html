@@ -3,205 +3,416 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>METANOIA USB Config</title>
+    <title>METANOIA Station Control</title>
     <style>
-        /* METANOIA Dark Theme Palette */
+        :root {
+            --bg-main: #0e0e0e;
+            --bg-card: #161616;
+            --bg-input: #1e1e1e;
+            --border-color: #2e2e2e;
+            --text-main: #e8e8e8;
+            --text-dim: #888888;
+            --primary: #ff8c00;      /* METANOIA Orange */
+            --primary-hover: #ffaa33;
+            --success: #4caf50;      /* Green */
+            --error: #f44336;        /* Red */
+            --accent: #00bcd4;       /* Cyan */
+        }
+
         body {
-            background-color: #0e0e0e;
-            color: #e8e8e8;
+            background-color: var(--bg-main);
+            color: var(--text-main);
             font-family: 'Courier New', Courier, monospace;
             margin: 0;
-            padding: 20px;
+            padding: 15px;
             display: flex;
             flex-direction: column;
             gap: 15px;
         }
-        h2 {
-            color: #ff8c00; /* ORANGE */
+
+        header {
+            text-align: center;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 10px;
+        }
+
+        header h1 {
+            color: var(--primary);
             margin: 0;
+            font-size: 22px;
+            letter-spacing: 1px;
+        }
+
+        header p {
+            margin: 5px 0 0 0;
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        /* Top Connection Panel */
+        .conn-panel {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .status-badge {
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        .disconnected { background-color: rgba(244, 67, 54, 0.15); color: var(--error); border: 1px solid var(--error); }
+        .connected { background-color: rgba(76, 175, 80, 0.15); color: var(--success); border: 1px solid var(--success); }
+
+        /* Navigation Tabs */
+        .tab-bar {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            gap: 5px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: 1px solid transparent;
+            color: var(--text-dim);
+            padding: 10px 15px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px 5px 0 0;
+            margin-bottom: -1px;
+        }
+
+        .tab-btn.active {
+            background-color: var(--bg-card);
+            border-color: var(--border-color) var(--border-color) var(--bg-card);
+            color: var(--primary);
+        }
+
+        /* Tab Contents */
+        .tab-content {
+            display: none;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-top: none;
+            padding: 15px;
+            border-radius: 0 0 6px 6px;
+            min-height: 350px;
+        }
+
+        .tab-content.active { display: block; }
+
+        /* Form Controls */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .input-group label {
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        input, select {
+            background-color: var(--bg-input);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            font-family: inherit;
+            border-radius: 4px;
+            font-size: 15px;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        /* Action Buttons */
+        button.action-btn {
+            background-color: var(--primary);
+            color: var(--bg-main);
+            border: none;
+            padding: 12px;
+            font-family: inherit;
+            font-weight: bold;
+            font-size: 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        button.action-btn:active { background-color: var(--primary-hover); }
+        button:disabled { background-color: #333 !important; color: #555 !important; cursor: not-allowed; }
+
+        /* Terminals and Monitors */
+        .monitor-box {
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 10px;
+            font-size: 13px;
+            height: 280px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .fan-log { color: var(--accent); }
+        .system-log { color: var(--success); }
+
+        /* Grid for Live Battery Specs */
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .metric-card {
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            border-radius: 4px;
             text-align: center;
         }
-        .control-panel {
-            background-color: #161616;
-            border: 1px solid #2e2e2e;
-            padding: 15px;
-            border-radius: 5px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            align-items: center;
-            justify-content: space-between;
-        }
-        button {
-            background-color: #ff8c00;
-            color: #0e0e0e;
-            border: none;
-            padding: 10px 20px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 3px;
-            cursor: pointer;
-            font-family: 'Courier New', Courier, monospace;
-        }
-        button:active { background-color: #ffaa33; }
-        button:disabled { background-color: #555; color: #222; cursor: not-allowed; }
-        
-        select, input {
-            background-color: #1e1e1e;
-            color: #e8e8e8;
-            border: 1px solid #2e2e2e;
-            padding: 10px;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 16px;
-        }
-        
-        #log {
-            width: 100%;
-            height: 300px;
-            background-color: #1e1e1e;
-            color: #4caf50; /* GREEN for incoming text */
-            border: 1px solid #2e2e2e;
-            padding: 10px;
-            box-sizing: border-box;
-            resize: vertical;
-            overflow-y: auto;
-        }
-        .status-disconnected { color: #f44336; font-weight: bold; } /* RED */
-        .status-connected { color: #4caf50; font-weight: bold; } /* GREEN */
+
+        .metric-card div:first-child { font-size: 11px; color: var(--text-dim); margin-bottom: 5px; }
+        .metric-card div:last-child { font-size: 20px; font-weight: bold; color: var(--primary); }
+
     </style>
 </head>
 <body>
 
-    <h2>METANOIA.llc - Web USB</h2>
+    <header>
+        <h1>METANOIA.llc</h1>
+        <p>Firmware Configuration Ecosystem — Mobile Port</p>
+    </header>
 
-    <div class="control-panel">
-        <div>
-            <label for="baud">Baud:</label>
-            <select id="baud">
+    <div class="conn-panel">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <label style="font-size: 13px; color: var(--text-dim);">Baud:</label>
+            <select id="baudSelect">
                 <option value="9600" selected>9600</option>
-                <option value="19200">19200</option>
                 <option value="115200">115200</option>
             </select>
         </div>
-        <span id="status" class="status-disconnected">DISCONNECTED</span>
-        <button id="btnConnect">CONNECT FTDI</button>
-        <button id="btnDisconnect" disabled>DISCONNECT</button>
+        <div id="statusBadge" class="status-badge disconnected">DISCONNECTED</div>
+        <button id="btnConnect" style="background-color: var(--primary); color: #000; font-weight: bold; padding: 8px 12px; border: none; border-radius: 4px;">CONNECT</button>
     </div>
 
-    <div class="control-panel">
-        <input type="text" id="cmdInput" placeholder="Enter hex or text command..." style="flex-grow: 1;">
-        <button id="btnSend" disabled>SEND</button>
+    <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('hmi-tab', this)">HMI CONFIG</button>
+        <button class="tab-btn" onclick="switchTab('fan-tab', this)">FAN LOG</button>
+        <button class="tab-btn" onclick="switchTab('battery-tab', this)">BATTERY LIVE</button>
     </div>
 
-    <label for="log"><strong>Serial Log:</strong></label>
-    <textarea id="log" readonly></textarea>
+    <div id="hmi-tab" class="tab-content active">
+        <div class="form-grid">
+            <div class="input-group">
+                <label>FAN ON TEMP (°C)</label>
+                <input type="number" id="fanOnTemp" value="48" min="0" max="100">
+            </div>
+            <div class="input-group">
+                <label>FAN OFF TEMP (°C)</label>
+                <input type="number" id="fanOffTemp" value="46" min="0" max="100">
+            </div>
+        </div>
+        <div class="form-grid">
+            <div class="input-group">
+                <label>SYS ADDR (HEX BYTE)</label>
+                <input type="text" id="sysAddr" value="AA" maxlength="2" style="text-transform: uppercase;">
+            </div>
+            <div class="input-group">
+                <label>MODE DESCRIPTOR</label>
+                <select id="modeSelect">
+                    <option value="01">01 - PERFORMANCE</option>
+                    <option value="02">02 - BALANCED / ECO</option>
+                </select>
+            </div>
+        </div>
+        <button id="btnWriteConfig" class="action-btn" disabled style="margin-top: 15px;">WRITE CONFIG TO STATION</button>
+    </div>
+
+    <div id="fan-tab" class="tab-content">
+        <div id="fanLogArea" class="monitor-box fan-log">[SYSTEM] Awaiting FTDI physical serial hookup...</div>
+    </div>
+
+    <div id="battery-tab" class="tab-content">
+        <div class="metric-grid">
+            <div class="metric-card">
+                <div>CELL VOLTAGE</div>
+                <div id="lblVoltage">0.00 V</div>
+            </div>
+            <div class="metric-card">
+                <div>CURRENT STATE</div>
+                <div id="lblStatus">STANDBY</div>
+            </div>
+        </div>
+        <label style="font-size: 11px; color: var(--text-dim); display: block; margin-bottom: 5px;">RAW DATASTREAM OUT:</label>
+        <div id="sysLogArea" class="monitor-box system-log"></div>
+    </div>
 
     <script>
         let port;
         let reader;
-        let inputDone;
-        let outputDone;
-        let inputStream;
-        let outputStream;
+        let keepReading = true;
 
+        // UI Target Elements
         const btnConnect = document.getElementById('btnConnect');
-        const btnDisconnect = document.getElementById('btnDisconnect');
-        const btnSend = document.getElementById('btnSend');
-        const statusSpan = document.getElementById('status');
-        const logArea = document.getElementById('log');
-        const cmdInput = document.getElementById('cmdInput');
-        const baudSelect = document.getElementById('baud');
+        const statusBadge = document.getElementById('statusBadge');
+        const btnWriteConfig = document.getElementById('btnWriteConfig');
+        const fanLogArea = document.getElementById('fanLogArea');
+        const sysLogArea = document.getElementById('sysLogArea');
+        const baudSelect = document.getElementById('baudSelect');
 
-        // Check if browser supports Web Serial
-        if (!("serial" in navigator)) {
-            alert("Web Serial API not supported in this browser. Please use Chrome for Android.");
-            btnConnect.disabled = true;
+        // Tab Switching Logic
+        function switchTab(tabId, element) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            element.classList.add('active');
         }
 
-        function log(msg, color = "#e8e8e8") {
-            logArea.value += msg + "\n";
-            logArea.scrollTop = logArea.scrollHeight; // Auto-scroll
-        }
-
+        // Connection Execution Block
         btnConnect.addEventListener('click', async () => {
+            if (port) {
+                // Graceful Disconnect Execution
+                keepReading = false;
+                if (reader) { await reader.cancel(); }
+                await port.close();
+                port = null;
+                updateUIState(false);
+                return;
+            }
+
             try {
-                // Prompt user to select the FTDI USB device
+                // Request port selection through Web Serial API
                 port = await navigator.serial.requestPort();
-                
-                // Open the connection
                 const baudRate = parseInt(baudSelect.value);
+                
                 await port.open({ baudRate: baudRate });
-
-                // Set up UI
-                statusSpan.textContent = "CONNECTED";
-                statusSpan.className = "status-connected";
-                btnConnect.disabled = true;
-                btnDisconnect.disabled = false;
-                btnSend.disabled = false;
-                log(`[SYSTEM] Connected to FTDI at ${baudRate} baud.`);
-
-                // Start reading data
-                readLoop();
+                
+                updateUIState(true);
+                keepReading = true;
+                readSerialStream();
 
             } catch (err) {
-                log(`[ERROR] Connection failed: ${err.message}`, "#f44336");
+                // Intercept execution cancellations or permission deadlocks
+                if (err.name === 'NotFoundError') {
+                    alert("Connection Denied:\nNo device selected. If the popup list was empty, ensure 'OTG Connection' is enabled inside your phone's system settings.");
+                } else {
+                    alert(`System Interface Error: ${err.message}`);
+                }
+                updateUIState(false);
             }
         });
 
-        btnDisconnect.addEventListener('click', async () => {
-            if (reader) {
-                await reader.cancel();
+        function updateUIState(isConnected) {
+            if (isConnected) {
+                statusBadge.textContent = "CONNECTED";
+                statusBadge.className = "status-badge connected";
+                btnConnect.textContent = "DISCONNECT";
+                btnWriteConfig.disabled = false;
+                fanLogArea.textContent = `[${new Date().toLocaleTimeString()}] Dynamic monitoring channel linked.\n`;
+            } else {
+                statusBadge.textContent = "DISCONNECTED";
+                statusBadge.className = "status-badge disconnected";
+                btnConnect.textContent = "CONNECT";
+                btnWriteConfig.disabled = true;
             }
-            if (port) {
-                await port.close();
-            }
+        }
+
+        // Configuration Byte Framing Execution
+        btnWriteConfig.addEventListener('click', async () => {
+            if (!port || !port.writable) return;
+
+            const fanOn = parseInt(document.getElementById('fanOnTemp').value) || 48;
+            const fanOff = parseInt(document.getElementById('fanOffTemp').value) || 46;
+            const addr = document.getElementById('sysAddr').value || "AA";
+            const mode = document.getElementById('modeSelect').value;
+
+            // Framework framing matching your local custom protocol: [Header, Addr, Mode, FanOn, FanOff, Newline]
+            const payload = `$CFG,${addr},${mode},${fanOn},${fanOff}\r\n`;
             
-            statusSpan.textContent = "DISCONNECTED";
-            statusSpan.className = "status-disconnected";
-            btnConnect.disabled = false;
-            btnDisconnect.disabled = true;
-            btnSend.disabled = true;
-            log("[SYSTEM] Disconnected.");
-        });
-
-        btnSend.addEventListener('click', async () => {
-            if (!port) return;
-            const text = cmdInput.value;
-            if (!text) return;
-
             const encoder = new TextEncoder();
             const writer = port.writable.getWriter();
-            
-            // Append newline if your station expects it, remove if not
-            await writer.write(encoder.encode(text + "\r\n")); 
+            await writer.write(encoder.encode(payload));
             writer.releaseLock();
-            
-            log(`[TX] ${text}`);
-            cmdInput.value = ""; // clear input
+
+            sysLogArea.textContent += `[TX COMPLETED]: ${payload}`;
+            sysLogArea.scrollTop = sysLogArea.scrollHeight;
         });
 
-        async function readLoop() {
+        // Background Parser Stream for Incoming Hardware Strings
+        async function readSerialStream() {
             const decoder = new TextDecoderStream();
-            inputDone = port.readable.pipeTo(decoder.writable);
-            inputStream = decoder.readable;
+            const inputDone = port.readable.pipeTo(decoder.writable);
+            const inputStream = decoder.readable;
             reader = inputStream.getReader();
 
+            let buffer = "";
+
             try {
-                while (true) {
+                while (keepReading) {
                     const { value, done } = await reader.read();
+                    if (done) break;
                     if (value) {
-                        // value is a string from the TextDecoder
-                        logArea.value += value;
-                        logArea.scrollTop = logArea.scrollHeight;
-                    }
-                    if (done) {
-                        break;
+                        buffer += value;
+                        let lines = buffer.split("\n");
+                        buffer = lines.pop(); // Keep partial trailing lines inside buffer
+
+                        for (let line of lines) {
+                            line = line.trim();
+                            if (!line) continue;
+
+                            // Echo line directly to raw console data feed
+                            sysLogArea.textContent += `[RX]: ${line}\n`;
+                            sysLogArea.scrollTop = sysLogArea.scrollHeight;
+
+                            // Handle Custom Parsers mirroring the original desktop logic
+                            processIncomingTelemetry(line);
+                        }
                     }
                 }
-            } catch (error) {
-                log(`[ERROR] Read error: ${error}`, "#f44336");
+            } catch (err) {
+                sysLogArea.textContent += `[STREAM CORRUPTED]: ${err.message}\n`;
             } finally {
                 reader.releaseLock();
+            }
+        }
+
+        function processIncomingTelemetry(line) {
+            const timestamp = new Date().toLocaleTimeString();
+            
+            // Example custom parser logic looking for telemetry lines
+            if (line.includes("TEMP") || line.includes("FAN")) {
+                fanLogArea.textContent = `[${timestamp}] ${line}\n` + fanLogArea.textContent;
+            }
+            
+            if (line.includes("VOLT") || line.startsWith("$BATT")) {
+                // Example pattern parse: $BATT,3.82,CHARGING
+                const tokens = line.split(',');
+                if(tokens.length >= 3) {
+                    document.getElementById('lblVoltage').textContent = `${tokens[1]} V`;
+                    document.getElementById('lblStatus').textContent = tokens[2].toUpperCase();
+                }
             }
         }
     </script>
