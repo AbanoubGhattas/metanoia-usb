@@ -2,375 +2,245 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>METANOIA.llc — Web Config</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>METANOIA Mobile</title>
     <style>
-        /* METANOIA Tkinter Palette Replicated */
         :root {
-            --bg: #0e0e0e;
-            --bg2: #161616;
-            --bg3: #1e1e1e;
-            --border: #2e2e2e;
-            --fg: #e8e8e8;
-            --fg-dim: #888888;
-            --orange: #ff8c00;
-            --orange2: #ffaa33;
-            --green: #4caf50;
-            --red: #f44336;
-            --cyan: #00bcd4;
-            --blue: #2a7fff;
+            --bg: #0a0a0a; --bg-card: #141414; --bg-input: #1f1f1f;
+            --border: #2a2a2a; --text: #e0e0e0; --text-dim: #808080;
+            --orange: #ff8c00; --green: #4caf50; --red: #f44336; --cyan: #00bcd4; --blue: #2a7fff;
         }
 
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
         body {
-            background-color: var(--bg);
-            color: var(--fg);
-            font-family: 'Courier New', Courier, monospace;
-            margin: 0;
-            padding: 10px;
-            font-size: 14px;
+            background-color: var(--bg); color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0; padding: 0; padding-bottom: 80px; /* Space for bottom nav */
         }
 
-        /* Top Bar & Connection */
-        .header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
-        .header h1 { color: var(--orange); margin: 0; font-size: 20px; }
-        .header span { color: var(--fg-dim); font-size: 13px; }
-        
-        .toolbar { background-color: var(--bg2); padding: 10px; border-radius: 4px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
-        
-        /* Live Stats Strip */
-        .stats-strip { background-color: #111; padding: 10px; display: flex; gap: 20px; border-radius: 4px; margin-bottom: 15px; overflow-x: auto;}
-        .stat-box { display: flex; flex-direction: column; align-items: center; }
-        .stat-box .lbl { color: var(--fg-dim); font-size: 11px; font-weight: bold; }
-        .stat-box .val { font-size: 18px; font-weight: bold; }
-        .val.orange { color: var(--orange); } .val.green { color: var(--green); }
-        .val.cyan { color: var(--cyan); } .val.red { color: var(--red); } .val.fg { color: var(--fg); }
+        /* Top Header */
+        .header {
+            background-color: var(--bg-card); padding: 15px 20px;
+            border-bottom: 1px solid var(--orange);
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 100;
+        }
+        .header h1 { margin: 0; font-size: 20px; color: var(--orange); font-weight: 800; letter-spacing: 1px; }
+        .status-dot { width: 12px; height: 12px; border-radius: 50%; background-color: var(--text-dim); }
+        .status-dot.connected { background-color: var(--green); box-shadow: 0 0 8px var(--green); }
 
-        /* Tabs */
-        .tab-bar { display: flex; border-bottom: 2px solid var(--bg2); gap: 2px; overflow-x: auto; }
-        .tab-btn { background-color: var(--bg3); color: var(--fg-dim); border: none; padding: 10px 15px; cursor: pointer; font-family: inherit; font-weight: bold; }
-        .tab-btn.active { background-color: var(--bg2); color: var(--orange); }
-        .tab-content { display: none; background-color: var(--bg2); padding: 15px; min-height: 400px; }
-        .tab-content.active { display: block; }
-
-        /* Form Elements */
-        .section-title { color: var(--orange); font-size: 15px; font-weight: bold; margin: 15px 0 10px 0; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
-        .form-row { display: flex; align-items: center; margin-bottom: 8px; }
-        .form-row label { width: 220px; color: var(--fg-dim); }
-        input { background-color: var(--bg3); color: var(--fg); border: 1px solid var(--border); padding: 6px; font-family: inherit; width: 250px; outline: none; }
-        input:focus { border-color: var(--orange); }
+        /* Connection Card */
+        .card { background-color: var(--bg-card); margin: 15px; border-radius: 12px; padding: 15px; border: 1px solid var(--border); }
+        .btn {
+            width: 100%; padding: 16px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold;
+            cursor: pointer; margin-bottom: 10px; color: #fff; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .btn:disabled { background-color: #333 !important; color: #666 !important; }
+        .btn-blue { background-color: var(--blue); }
+        .btn-red { background-color: var(--red); }
+        .btn-orange { background-color: var(--orange); color: #000; }
         
-        button { font-family: inherit; font-weight: bold; padding: 6px 12px; cursor: pointer; border: none; border-radius: 3px; color: #000; }
-        button:disabled { background-color: #444 !important; color: #777 !important; cursor: not-allowed; }
-        .btn-blue { background-color: var(--blue); color: #fff;}
-        .btn-red { background-color: var(--red); color: #fff;}
-        .btn-orange { background-color: var(--orange); }
-        .btn-green { background-color: var(--green); }
+        /* Live Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
+        .stat-box { background: var(--bg-input); padding: 12px; border-radius: 8px; text-align: center; }
+        .stat-lbl { font-size: 11px; color: var(--text-dim); font-weight: 600; display: block; margin-bottom: 4px; }
+        .stat-val { font-size: 20px; font-weight: bold; font-family: monospace; }
+        .v-green { color: var(--green); } .v-cyan { color: var(--cyan); } .v-red { color: var(--red); } .v-orange { color: var(--orange); }
 
-        textarea { width: 100%; height: 150px; background-color: var(--bg3); color: var(--fg); border: 1px solid var(--border); font-family: inherit; padding: 8px; box-sizing: border-box; resize: vertical; }
-        .note { color: var(--fg-dim); font-size: 12px; margin-top: 4px; margin-bottom: 10px; }
+        /* Form Inputs */
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; color: var(--text-dim); font-size: 13px; margin-bottom: 6px; font-weight: 500; }
+        input {
+            width: 100%; background-color: var(--bg-input); color: var(--text);
+            border: 1px solid var(--border); border-radius: 8px; padding: 14px;
+            font-size: 16px; font-family: monospace; transition: border 0.2s;
+        }
+        input:focus { border-color: var(--orange); outline: none; }
+        textarea { width: 100%; height: 200px; background: var(--bg-input); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-family: monospace; font-size: 13px; }
+
+        /* Tab Content */
+        .tab-content { display: none; padding-top: 10px; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Bottom Navigation Bar */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%; background-color: var(--bg-card);
+            border-top: 1px solid var(--border); display: flex; overflow-x: auto;
+            padding: 10px 5px; padding-bottom: max(10px, env(safe-area-inset-bottom));
+            z-index: 100;
+        }
+        .nav-item {
+            flex: 0 0 auto; min-width: 75px; background: none; border: none; color: var(--text-dim);
+            font-size: 11px; font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 4px;
+            padding: 5px 10px; border-radius: 8px;
+        }
+        .nav-item.active { color: var(--orange); background-color: rgba(255, 140, 0, 0.1); }
+        .nav-icon { font-size: 20px; }
     </style>
 </head>
 <body>
 
     <div class="header">
         <h1>METANOIA.llc</h1>
-        <span>· Web UART Config</span>
+        <div id="statusDot" class="status-dot"></div>
     </div>
 
-    <div class="toolbar">
-        <select id="baud" style="background:var(--bg3); color:var(--fg); border:1px solid var(--border); padding:6px; font-family:inherit;">
-            <option value="115200" selected>115200</option>
-        </select>
-        <button id="btnConnect" class="btn-blue">⟳ Connect</button>
-        <button id="btnDisconnect" class="btn-red" disabled>✖ Disconnect</button>
-        <button id="btnSave" class="btn-orange" disabled>✔ Save All</button>
-        <button id="btnReboot" class="btn-red" disabled>⟲ Reboot</button>
-        <span id="statusLbl" style="margin-left:auto; color:var(--fg-dim);">⬤ Not connected</span>
-    </div>
-
-    <div class="stats-strip">
-        <div class="stat-box"><span class="lbl">NODE</span><span id="st_node" class="val orange">–</span></div>
-        <div class="stat-box"><span class="lbl">SN</span><span id="st_sn" class="val fg">–</span></div>
-        <div class="stat-box"><span class="lbl">BAT</span><span id="st_bat" class="val green">–</span></div>
-        <div class="stat-box"><span class="lbl">TEMP</span><span id="st_temp" class="val cyan">–</span></div>
-        <div class="stat-box"><span class="lbl">FAN</span><span id="st_fan" class="val red">–</span></div>
-        <div class="stat-box"><span class="lbl">ST1</span><span id="st_s1" class="val fg">–</span></div>
-        <div class="stat-box"><span class="lbl">ST2</span><span id="st_s2" class="val fg">–</span></div>
-    </div>
-
-    <div class="tab-bar" id="tabs">
-        <button class="tab-btn active" onclick="openTab('tab-id')">🔒 Identity</button>
-        <button class="tab-btn" onclick="openTab('tab-wifi')">📡 WiFi</button>
-        <button class="tab-btn" onclick="openTab('tab-email')">📧 Email</button>
-        <button class="tab-btn" onclick="openTab('tab-bat')">🔋 Battery</button>
-        <button class="tab-btn" onclick="openTab('tab-sns')">📊 Sensors</button>
-        <button class="tab-btn" onclick="openTab('tab-fan')">🌡 Fan</button>
-        <button class="tab-btn" onclick="openTab('tab-hmi')">🖥 HMI</button>
-        <button class="tab-btn" onclick="openTab('tab-log')">📋 Log</button>
-    </div>
-
-    <div id="tab-id" class="tab-content active">
-        <div class="section-title">Station Identity</div>
-        <div class="form-row"><label>Station Name</label><input type="text" id="node_name" class="nvs-val"></div>
-        <div class="form-row"><label>Serial Number</label><input type="text" id="serial_num" class="nvs-val"></div>
-        <div class="note">★ Serial number is editable — useful for inventory tracking.</div>
-    </div>
-
-    <div id="tab-wifi" class="tab-content">
-        <div class="section-title">WiFi Credentials</div>
-        <div class="form-row"><label>SSID</label><input type="text" id="wifi_ssid" class="nvs-val"></div>
-        <div class="form-row"><label>Password</label><input type="password" id="wifi_pass" class="nvs-val"></div>
-        <div class="note">★ Save WiFi changes then Reboot.</div>
-    </div>
-
-    <div id="tab-email" class="tab-content">
-        <div class="section-title">SMTP Settings</div>
-        <div class="form-row"><label>SMTP Host</label><input type="text" id="smtp_host" class="nvs-val"></div>
-        <div class="form-row"><label>SMTP Port</label><input type="text" id="smtp_port" class="nvs-val"></div>
-        <div class="form-row"><label>Sender Email</label><input type="text" id="author_email" class="nvs-val"></div>
-        <div class="form-row"><label>Sender App-Pass</label><input type="password" id="author_pass" class="nvs-val"></div>
-        <div class="form-row"><label>Recipient Email</label><input type="text" id="recip_email" class="nvs-val"></div>
+    <div class="card" id="dash-card">
+        <button id="btnConnect" class="btn btn-blue">⟳ CONNECT FTDI</button>
+        <button id="btnDisconnect" class="btn btn-red" style="display:none;">✖ DISCONNECT</button>
         
-        <div class="section-title">Test Email</div>
-        <button id="btnTestEmail" class="btn-blue" disabled>✉ Send Test Email</button>
-        <span id="emailStatus" style="color:var(--green); margin-left:10px;"></span>
-    </div>
-
-    <div id="tab-bat" class="tab-content">
-        <div class="section-title">Battery Monitoring</div>
-        <div class="form-row"><label>Voltage Divider Ratio</label><input type="text" id="bat_ratio" class="nvs-val"></div>
-        <div class="form-row"><label>Low Voltage Threshold (V)</label><input type="text" id="bat_low_v" class="nvs-val"></div>
-        <div class="form-row"><label>Check Interval (ms)</label><input type="text" id="bat_check_ms" class="nvs-val"></div>
-        <div class="note">★ Default ratio 13.95 for 110 kΩ + 9.1 kΩ divider.</div>
-    </div>
-
-    <div id="tab-sns" class="tab-content">
-        <div class="section-title">Ultrasonic Settings</div>
-        <div class="form-row"><label>Trigger Pulse (µs)</label><input type="text" id="trig_us" class="nvs-val"></div>
-        <div class="form-row"><label>Empty Distance (cm)</label><input type="text" id="dist_empty_cm" class="nvs-val"></div>
-        <div class="form-row"><label>Confirm Readings</label><input type="text" id="confirm_rdgs" class="nvs-val"></div>
-        <div class="form-row"><label>Sensor Period (ms)</label><input type="text" id="sensor_period_ms" class="nvs-val"></div>
-        <div class="form-row"><label>Watchdog Timeout (ms)</label><input type="text" id="watchdog_ms" class="nvs-val"></div>
-    </div>
-
-    <div id="tab-fan" class="tab-content">
-        <div class="section-title">Fan Control — IO13</div>
-        <div class="form-row"><label>Fan ON Temp (°C)</label><input type="text" id="fan_on_temp" class="nvs-val"></div>
-        <div class="form-row"><label>Fan OFF Temp (°C)</label><input type="text" id="fan_off_temp" class="nvs-val"></div>
-        <div class="form-row"><label>Temp Offset (°C)</label><input type="text" id="temp_offset" class="nvs-val"></div>
-        
-        <div class="section-title">Fan Decision Log</div>
-        <textarea id="fanLogArea" readonly></textarea>
-    </div>
-
-    <div id="tab-hmi" class="tab-content">
-        <div class="section-title">Local UART HMI Settings (Hex Codes)</div>
-        <div class="form-row"><label>Bin 1 UP</label><input type="text" id="hmi_up1" class="nvs-val"></div>
-        <div class="form-row"><label>Bin 1 DOWN</label><input type="text" id="hmi_dn1" class="nvs-val"></div>
-        <div class="form-row"><label>Bin 2 UP</label><input type="text" id="hmi_up2" class="nvs-val"></div>
-        <div class="form-row"><label>Bin 2 DOWN</label><input type="text" id="hmi_dn2" class="nvs-val"></div>
-        <div class="form-row"><label>Sensor Request</label><input type="text" id="hmi_req" class="nvs-val"></div>
-        <div class="form-row"><label>Packet Head Byte</label><input type="text" id="hmi_head" class="nvs-val"></div>
-        <div class="form-row"><label>Packet Tail Byte</label><input type="text" id="hmi_tail" class="nvs-val"></div>
-    </div>
-
-    <div id="tab-log" class="tab-content">
-        <div class="section-title">Maintenance Log</div>
-        <textarea id="maintLogArea" readonly style="margin-bottom:10px;"></textarea>
-        <div class="form-row">
-            <input type="text" id="newLogEntry" placeholder="Type new log entry..." style="width: 60%; margin-right: 10px;">
-            <button id="btnAppendLog" class="btn-green" disabled>➕ Append</button>
-            <button id="btnRefreshLog" class="btn-blue" disabled style="margin-left:10px;">⟳ Refresh</button>
+        <div class="stats-grid">
+            <div class="stat-box"><span class="stat-lbl">BATTERY</span><span id="st_bat" class="stat-val v-green">-- V</span></div>
+            <div class="stat-box"><span class="stat-lbl">TEMP</span><span id="st_temp" class="stat-val v-cyan">-- °C</span></div>
+            <div class="stat-box"><span class="stat-lbl">FAN STATE</span><span id="st_fan" class="stat-val v-red">--</span></div>
+            <div class="stat-box"><span class="stat-lbl">NODE</span><span id="st_node" class="stat-val v-orange">--</span></div>
         </div>
     </div>
 
+    <div class="card tab-content active" id="tab-id">
+        <h3 style="margin-top:0; color:var(--orange);">Identity & WiFi</h3>
+        <div class="form-group"><label>Station Name</label><input type="text" id="node_name" class="nvs-val"></div>
+        <div class="form-group"><label>Serial Number</label><input type="text" id="serial_num" class="nvs-val"></div>
+        <div class="form-group"><label>WiFi SSID</label><input type="text" id="wifi_ssid" class="nvs-val"></div>
+        <div class="form-group"><label>WiFi Password</label><input type="password" id="wifi_pass" class="nvs-val"></div>
+    </div>
+
+    <div class="card tab-content" id="tab-fan">
+        <h3 style="margin-top:0; color:var(--orange);">Fan & Battery Limits</h3>
+        <div class="form-group"><label>Fan ON Temp (°C)</label><input type="number" id="fan_on_temp" class="nvs-val"></div>
+        <div class="form-group"><label>Fan OFF Temp (°C)</label><input type="number" id="fan_off_temp" class="nvs-val"></div>
+        <div class="form-group"><label>Low Battery Alarm (V)</label><input type="number" id="bat_low_v" class="nvs-val"></div>
+        <div class="form-group"><label>Divider Ratio</label><input type="number" step="0.01" id="bat_ratio" class="nvs-val"></div>
+    </div>
+
+    <div class="card tab-content" id="tab-log">
+        <h3 style="margin-top:0; color:var(--orange);">Maint. Log</h3>
+        <textarea id="maintLogArea" readonly></textarea>
+        <div class="form-group" style="margin-top:15px;">
+            <input type="text" id="newLogEntry" placeholder="Add entry...">
+        </div>
+        <button id="btnAppendLog" class="btn btn-green" disabled>➕ APPEND LOG</button>
+    </div>
+
+    <div class="card" style="margin-top: 5px; margin-bottom: 20px;">
+        <button id="btnSave" class="btn btn-orange" disabled>✔ SAVE CHANGES TO ESP32</button>
+        <button id="btnReboot" class="btn btn-red" disabled style="margin-bottom:0;">⟲ REBOOT</button>
+    </div>
+
+    <div class="bottom-nav">
+        <button class="nav-item active" onclick="switchTab('tab-id', this)">
+            <span class="nav-icon">🔒</span><span>Identity</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('tab-fan', this)">
+            <span class="nav-icon">🌡</span><span>Limits</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('tab-log', this)">
+            <span class="nav-icon">📋</span><span>Logs</span>
+        </button>
+    </div>
+
     <script>
-        // UI Logic
-        function openTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
-            event.target.classList.add('active');
+            el.classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Serial Protocol State
-        let port;
-        let reader;
-        let writer;
-        let keepReading = false;
-        let readBuffer = "";
-        let pollInterval;
+        let port; let reader; let writer; let keepReading = false; let readBuffer = ""; let pollInt;
 
-        const uiElements = {
+        const ui = {
             btnConnect: document.getElementById('btnConnect'),
             btnDisconnect: document.getElementById('btnDisconnect'),
             btnSave: document.getElementById('btnSave'),
             btnReboot: document.getElementById('btnReboot'),
-            btnTestEmail: document.getElementById('btnTestEmail'),
             btnAppendLog: document.getElementById('btnAppendLog'),
-            btnRefreshLog: document.getElementById('btnRefreshLog'),
-            statusLbl: document.getElementById('statusLbl')
+            statusDot: document.getElementById('statusDot')
         };
 
-        function setStatus(msg, color) {
-            uiElements.statusLbl.textContent = msg;
-            uiElements.statusLbl.style.color = color;
+        function setConnected(state) {
+            ui.btnConnect.style.display = state ? 'none' : 'block';
+            ui.btnDisconnect.style.display = state ? 'block' : 'none';
+            ui.btnSave.disabled = !state; ui.btnReboot.disabled = !state; ui.btnAppendLog.disabled = !state;
+            if(state) ui.statusDot.classList.add('connected'); else ui.statusDot.classList.remove('connected');
         }
 
-        function toggleControls(connected) {
-            uiElements.btnConnect.disabled = connected;
-            uiElements.btnDisconnect.disabled = !connected;
-            uiElements.btnSave.disabled = !connected;
-            uiElements.btnReboot.disabled = !connected;
-            uiElements.btnTestEmail.disabled = !connected;
-            uiElements.btnAppendLog.disabled = !connected;
-            uiElements.btnRefreshLog.disabled = !connected;
-        }
-
-        // --- USB SERIAL LOGIC ---
-        uiElements.btnConnect.addEventListener('click', async () => {
+        ui.btnConnect.addEventListener('click', async () => {
             try {
-                port = await navigator.serial.requestPort();
-                await port.open({ baudRate: parseInt(document.getElementById('baud').value) });
+                // By providing empty filters, Chrome will list ALL serial devices it can find.
+                port = await navigator.serial.requestPort(); 
+                await port.open({ baudRate: 115200 });
                 
-                // Allow ESP32 DTR Reset time
-                setStatus("⬤ Booting...", "var(--orange)");
-                await new Promise(r => setTimeout(r, 1500)); 
-
                 writer = port.writable.getWriter();
                 keepReading = true;
-                readLoop(); // Start background JSON parser
-
-                // Initiate Connection handshake
-                await sendJson({ cmd: "connect" });
+                readLoop();
+                setTimeout(() => sendJson({ cmd: "connect" }), 1500); // Wait for DTR reset
                 
             } catch (err) {
-                setStatus("✖ Connection Error", "var(--red)");
-                console.error(err);
+                alert("USB Error: " + err.message + "\n\nIf it says 'no compatible device', ensure NO OTHER APP is using the USB port.");
             }
         });
 
-        uiElements.btnDisconnect.addEventListener('click', async () => {
-            if (writer) {
-                await sendJson({ cmd: "disconnect" });
-                writer.releaseLock();
-            }
-            keepReading = false;
-            if (reader) await reader.cancel();
-            if (port) await port.close();
-            
-            clearInterval(pollInterval);
-            toggleControls(false);
-            setStatus("⬤ Disconnected", "var(--fg-dim)");
+        ui.btnDisconnect.addEventListener('click', async () => {
+            if (writer) { await sendJson({ cmd: "disconnect" }); writer.releaseLock(); }
+            keepReading = false; if (reader) await reader.cancel(); if (port) await port.close();
+            clearInterval(pollInt); setConnected(false);
         });
 
-        async function sendJson(obj) {
-            if (!writer) return;
-            const payload = JSON.stringify(obj) + "\n";
-            await writer.write(new TextEncoder().encode(payload));
-        }
+        async function sendJson(obj) { if (writer) { await writer.write(new TextEncoder().encode(JSON.stringify(obj) + "\n")); } }
 
-        // Stream Parser: Buffers raw chars, splits by \n, parses JSON.
         async function readLoop() {
-            const decoder = new TextDecoderStream();
-            port.readable.pipeTo(decoder.writable);
-            reader = decoder.readable.getReader();
-
+            const decoder = new TextDecoderStream(); port.readable.pipeTo(decoder.writable); reader = decoder.readable.getReader();
             try {
                 while (keepReading) {
                     const { value, done } = await reader.read();
                     if (done) break;
                     if (value) {
-                        readBuffer += value;
-                        let lines = readBuffer.split('\n');
-                        readBuffer = lines.pop(); // Keep incomplete chunk
-
+                        readBuffer += value; let lines = readBuffer.split('\n'); readBuffer = lines.pop();
                         for (let line of lines) {
                             if (!line.trim()) continue;
-                            try {
-                                const data = JSON.parse(line.trim());
-                                handleStationResponse(data);
-                            } catch (e) {
-                                console.warn("Non-JSON received:", line);
-                            }
+                            try { handleData(JSON.parse(line.trim())); } catch (e) {}
                         }
                     }
                 }
-            } catch (e) {
-                console.error("Read error:", e);
-            } finally {
-                reader.releaseLock();
-            }
+            } catch (e) {} finally { reader.releaseLock(); }
         }
 
-        // --- RESPONSE ROUTER ---
-        function handleStationResponse(data) {
-            // 1. Connection success
+        function handleData(data) {
             if (data.cmd === "connect" && data.ok) {
-                setStatus("⬤ Connected", "var(--green)");
-                toggleControls(true);
-                sendJson({ cmd: "get_settings" }); // fetch NVS
-                sendJson({ cmd: "get_log" });
-                pollInterval = setInterval(() => sendJson({ cmd: "status" }), 2000); // Start live poll
+                setConnected(true);
+                sendJson({ cmd: "get_settings" }); sendJson({ cmd: "get_log" });
+                pollInt = setInterval(() => sendJson({ cmd: "status" }), 2000);
             }
-            
-            // 2. Settings Load
             if (data.cmd === "get_settings" || data.node_name) {
-                // Populate all inputs that match JSON keys
-                document.querySelectorAll('.nvs-val').forEach(input => {
-                    if (data[input.id] !== undefined) {
-                        input.value = data[input.id];
-                    }
-                });
-                document.getElementById('st_node').textContent = data.node_name || "–";
-                document.getElementById('st_sn').textContent = data.serial_num || "–";
+                document.querySelectorAll('.nvs-val').forEach(input => { if (data[input.id] !== undefined) input.value = data[input.id]; });
+                document.getElementById('st_node').textContent = data.node_name || "--";
             }
-
-            // 3. Live Polling (Status)
             if (data.bat_v !== undefined) {
                 document.getElementById('st_bat').textContent = parseFloat(data.bat_v).toFixed(2) + " V";
                 document.getElementById('st_temp').textContent = parseFloat(data.chip_temp).toFixed(1) + "°C";
                 document.getElementById('st_fan').textContent = data.fan_on ? "ON" : "OFF";
-                document.getElementById('st_s1').textContent = data.s1_pct !== undefined ? data.s1_pct + "%" : "–";
-                document.getElementById('st_s2').textContent = data.s2_pct !== undefined ? data.s2_pct + "%" : "–";
             }
-
-            // 4. Maint Log Fetch
-            if (data.log !== undefined) {
-                document.getElementById('maintLogArea').value = data.log || "(no entries)";
-            }
-
-            // 5. Success Notifications
-            if (data.cmd === "set_settings" && data.ok) setStatus("✔ Settings Saved!", "var(--orange)");
-            if (data.cmd === "test_email" && data.ok) document.getElementById('emailStatus').textContent = "✔ Sent!";
-            if (data.cmd === "append_log" && data.ok) { document.getElementById('newLogEntry').value = ""; sendJson({ cmd: "get_log" }); }
+            if (data.log !== undefined) document.getElementById('maintLogArea').value = data.log;
+            if (data.cmd === "set_settings" && data.ok) alert("Settings Saved!");
         }
 
-        // --- BUTTON ACTIONS ---
-        uiElements.btnSave.addEventListener('click', () => {
-            let payload = {};
-            document.querySelectorAll('.nvs-val').forEach(input => { payload[input.id] = input.value; });
+        ui.btnSave.addEventListener('click', () => {
+            let payload = {}; document.querySelectorAll('.nvs-val').forEach(input => { payload[input.id] = input.value; });
             sendJson({ cmd: "set_settings", payload: payload });
         });
-
-        uiElements.btnReboot.addEventListener('click', () => {
-            if(confirm("Reboot the station now?")) sendJson({ cmd: "reboot" });
-        });
-
-        uiElements.btnTestEmail.addEventListener('click', () => {
-            document.getElementById('emailStatus').textContent = "Sending...";
-            sendJson({ cmd: "test_email" });
-        });
-
-        uiElements.btnAppendLog.addEventListener('click', () => {
+        ui.btnReboot.addEventListener('click', () => { if(confirm("Reboot?")) sendJson({ cmd: "reboot" }); });
+        ui.btnAppendLog.addEventListener('click', () => {
             const entry = document.getElementById('newLogEntry').value;
-            if(!entry) return;
-            const ts = new Date().toISOString().replace('T', ' ').slice(0, 16);
-            sendJson({ cmd: "append_log", entry: `[${ts}] ${entry}` });
+            if(entry) {
+                const ts = new Date().toISOString().replace('T', ' ').slice(0, 16);
+                sendJson({ cmd: "append_log", entry: `[${ts}] ${entry}` });
+                document.getElementById('newLogEntry').value = '';
+            }
         });
-
-        uiElements.btnRefreshLog.addEventListener('click', () => sendJson({ cmd: "get_log" }));
-
     </script>
 </body>
 </html>
