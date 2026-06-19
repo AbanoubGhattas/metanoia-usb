@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>METANOIA Mobile Pro (WebUSB Final)</title>
+    <title>METANOIA Mobile Pro (WebUSB)</title>
     <style>
         :root {
             --bg: #0a0a0a; --bg-card: #141414; --bg-input: #1f1f1f;
@@ -19,6 +19,7 @@
             margin: 0; padding: 0; padding-bottom: 90px;
         }
 
+        /* Top Header */
         .header {
             background-color: var(--bg-card); padding: 15px 20px;
             border-bottom: 1px solid var(--orange);
@@ -29,6 +30,7 @@
         .status-dot { width: 12px; height: 12px; border-radius: 50%; background-color: var(--text-dim); }
         .status-dot.connected { background-color: var(--green); box-shadow: 0 0 8px var(--green); }
 
+        /* Dashboard & Global Actions */
         .card { background-color: var(--bg-card); margin: 12px; border-radius: 8px; padding: 15px; border: 1px solid var(--border); }
         .btn {
             width: 100%; padding: 14px; border: none; border-radius: 6px; font-size: 15px; font-weight: bold;
@@ -43,12 +45,14 @@
         .action-row { display: flex; gap: 10px; }
         .action-row .btn { margin-bottom: 0; }
 
+        /* Live Stats Grid */
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
         .stat-box { background: var(--bg-input); padding: 10px 5px; border-radius: 6px; text-align: center; }
         .stat-lbl { font-size: 10px; color: var(--text-dim); font-weight: bold; display: block; margin-bottom: 4px; }
         .stat-val { font-size: 14px; font-weight: bold; }
         .v-green { color: var(--green); } .v-cyan { color: var(--cyan); } .v-red { color: var(--red); } .v-orange { color: var(--orange); }
 
+        /* Form Inputs */
         .section-title { color: var(--orange); font-size: 16px; margin: 0 0 15px 0; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
         .form-group { margin-bottom: 12px; }
         .form-group label { display: block; color: var(--text-dim); font-size: 12px; margin-bottom: 4px; font-weight: bold; }
@@ -60,10 +64,12 @@
         input:focus { border-color: var(--orange); outline: none; }
         textarea { width: 100%; height: 180px; background: var(--bg-input); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-family: inherit; font-size: 13px; resize: vertical; }
 
+        /* Tab Content */
         .tab-content { display: none; }
         .tab-content.active { display: block; animation: fadeIn 0.2s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
+        /* Bottom Scrollable Navigation */
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; width: 100%; background-color: var(--bg-card);
             border-top: 1px solid var(--border); display: flex; overflow-x: auto;
@@ -87,13 +93,11 @@
         <div id="statusDot" class="status-dot"></div>
     </div>
 
-    <!-- Main Dashboard -->
     <div class="card" id="dash-card">
-        <button id="btnConnectFtdi" class="btn btn-blue">1. OPEN FTDI LINK</button>
-        <button id="btnConnectEsp" class="btn btn-green" style="display:none; color: #000;">2. CONNECT ESP (Handshake)</button>
+        <button id="btnConnect" class="btn btn-blue">⟳ CONNECT FTDI</button>
         <button id="btnDisconnect" class="btn btn-red" style="display:none; margin-bottom: 10px;">✖ DISCONNECT</button>
         
-        <div class="action-row" style="margin-top: 10px;">
+        <div class="action-row">
             <button id="btnSave" class="btn btn-orange" disabled>✔ SAVE ALL</button>
             <button id="btnReboot" class="btn btn-red" disabled>⟲ REBOOT</button>
         </div>
@@ -106,7 +110,6 @@
         </div>
     </div>
 
-    <!-- TAB 1: ID & WiFi -->
     <div class="card tab-content active" id="tab-id">
         <h3 class="section-title">Identity & Network</h3>
         <div class="form-group"><label>Station Name</label><input type="text" id="node_name" class="nvs-val"></div>
@@ -115,7 +118,6 @@
         <div class="form-group"><label>WiFi Password</label><input type="password" id="wifi_pass" class="nvs-val"></div>
     </div>
 
-    <!-- TAB 2: Email -->
     <div class="card tab-content" id="tab-email">
         <h3 class="section-title">SMTP Settings</h3>
         <div class="form-group"><label>SMTP Host</label><input type="text" id="smtp_host" class="nvs-val"></div>
@@ -126,11 +128,10 @@
         <button id="btnTestEmail" class="btn btn-blue" disabled style="margin-top: 10px;">✉ SEND TEST EMAIL</button>
     </div>
 
-    <!-- TAB 3: Power & Fan -->
     <div class="card tab-content" id="tab-pwr">
         <h3 class="section-title">Battery Limits (1S3P)</h3>
         <div class="form-group"><label>Divider Ratio</label><input type="number" step="0.01" id="bat_ratio" class="nvs-val"></div>
-        <div class="form-group"><label>Low Voltage Threshold (V)</label><input type="number" step="0.1" id="bat_low_v" class="nvs-val"></div>
+        <div class="form-group"><label>Low Voltage Threshold (V)</label><input type="number" step="0.1" id="bat_low_v" class="nvs-val" value="3.2"></div>
         <div class="form-group"><label>Check Interval (ms)</label><input type="number" id="bat_check_ms" class="nvs-val"></div>
         
         <h3 class="section-title" style="margin-top: 20px;">Thermal Limits</h3>
@@ -139,7 +140,6 @@
         <div class="form-group"><label>Temp Offset (°C)</label><input type="number" step="0.1" id="temp_offset" class="nvs-val"></div>
     </div>
 
-    <!-- TAB 4: Sensors -->
     <div class="card tab-content" id="tab-sns">
         <h3 class="section-title">Ultrasonic Tuning</h3>
         <div class="form-group"><label>Trigger Pulse (µs)</label><input type="number" id="trig_us" class="nvs-val"></div>
@@ -149,7 +149,6 @@
         <div class="form-group"><label>Watchdog Timeout (ms)</label><input type="number" id="watchdog_ms" class="nvs-val"></div>
     </div>
 
-    <!-- TAB 5: HMI Cmds -->
     <div class="card tab-content" id="tab-hmi">
         <h3 class="section-title">UART Hex Codes</h3>
         <div class="form-group"><label>Bin 1 UP</label><input type="text" id="hmi_up1" class="nvs-val"></div>
@@ -161,9 +160,8 @@
         <div class="form-group"><label>Packet Tail Byte</label><input type="text" id="hmi_tail" class="nvs-val"></div>
     </div>
 
-    <!-- TAB 6: Logs -->
     <div class="card tab-content" id="tab-log">
-        <h3 class="section-title">System Stream</h3>
+        <h3 class="section-title">Maintenance Log</h3>
         <textarea id="maintLogArea" readonly></textarea>
         <div class="form-group" style="margin-top:10px;">
             <input type="text" id="newLogEntry" placeholder="Type new log entry...">
@@ -174,7 +172,6 @@
         </div>
     </div>
 
-    <!-- Bottom Scrollable Navigation -->
     <div class="bottom-nav">
         <button class="nav-item active" onclick="switchTab('tab-id', this)"><span class="nav-icon">🔒</span><span>ID/WiFi</span></button>
         <button class="nav-item" onclick="switchTab('tab-email', this)"><span class="nav-icon">📧</span><span>Email</span></button>
@@ -185,7 +182,7 @@
     </div>
 
     <script>
-        // --- Tab Logic ---
+        // --- 1. Tab Navigation Logic ---
         function switchTab(tabId, el) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -194,14 +191,7 @@
             el.scrollIntoView({ behavior: 'smooth', inline: 'center' });
         }
 
-        // --- Log Output function ---
-        function printLog(msg) {
-            const logArea = document.getElementById('maintLogArea');
-            logArea.value += msg + "\n";
-            logArea.scrollTop = logArea.scrollHeight;
-        }
-
-        // --- FTDI Driver ---
+        // --- 2. Custom Native WebUSB FTDI Driver (Corrected Registers) ---
         class WebUsbFtdiDriver {
             constructor() {
                 this.device = null;
@@ -213,48 +203,49 @@
             }
 
             async connect() {
-                printLog("[1/6] Waiting for user selection...");
                 this.device = await navigator.usb.requestDevice({
                     filters: [{ vendorId: 0x0403 }]
                 });
 
-                printLog(`[2/6] Selected: ${this.device.productName || 'FTDI Device'}`);
                 await this.device.open();
                 
-                printLog("[3/6] Setting configuration...");
                 if (this.device.configuration === null) {
                     await this.device.selectConfiguration(1);
                 }
 
-                const usbInterface = this.device.configuration.interfaces[0];
-                this.interfaceNumber = usbInterface.interfaceNumber || 0;
+                const usbInterface = this.device.configuration.interfaces[0].alternate;
+                this.interfaceNumber = usbInterface.interfaceNumber;
                 
-                printLog("[4/6] Parsing endpoints...");
-                for (let endpoint of usbInterface.alternate.endpoints) {
+                for (let endpoint of usbInterface.endpoints) {
                     if (endpoint.direction === "in") this.endpointIn = endpoint.endpointNumber;
                     if (endpoint.direction === "out") this.endpointOut = endpoint.endpointNumber;
                 }
 
-                printLog("[5/6] Claiming interface " + this.interfaceNumber + "...");
-                try {
-                    await this.device.claimInterface(this.interfaceNumber);
-                } catch (e) {
-                    printLog("! Claim Failed. Forcing device reset...");
-                    await this.device.reset();
-                    await this.device.claimInterface(this.interfaceNumber);
-                }
+                await this.device.claimInterface(this.interfaceNumber);
 
-                printLog("[6/6] Sending 115200 baud configuration...");
-                // Explicitly hardcode 'index: 0' to prevent the undefined crash bug
-                await this.device.controlTransferOut({ requestType: 'vendor', recipient: 'device', request: 0, value: 0x0000, index: 0 }); // Reset
-                await this.device.controlTransferOut({ requestType: 'vendor', recipient: 'device', request: 3, value: 0x001A, index: 0 }); // Baud
-                await this.device.controlTransferOut({ requestType: 'vendor', recipient: 'device', request: 4, value: 0x0008, index: 0 }); // 8 Data Bits
-                await this.device.controlTransferOut({ requestType: 'vendor', recipient: 'device', request: 2, value: 0x0000, index: 0 }); // No Flow Control
+                // --- CRITICAL FIX: CORRECT FTDI REGISTER MAPPING ---
+                
+                // 1. Reset (Request 0x00)
+                await this.device.controlTransferOut({ requestType: 'vendor', recipient: 'device', request: 0x00, value: 0x00, index: this.interfaceNumber });
+                
+                // 2. Set Baud Rate (Request 0x03) | 0x001A = 115200 Baud
+                await this.device.controlTransferOut({ requestType: 'vendor', recipient: 'device', request: 0x03, value: 0x001A, index: 0x0000 });
+                
+                // 3. Set Data Bits (Request 0x04) | 0x0008 = 8 Data Bits, 1 Stop Bit, No Parity
+                await this.device.controlTransferOut({ requestType: 'vendor', recipient: 'device', request: 0x04, value: 0x0008, index: this.interfaceNumber });
+                
+                // 4. Set Flow Control (Request 0x02) | 0x0000 = None
+                await this.device.controlTransferOut({ requestType: 'vendor', recipient: 'device', request: 0x02, value: 0x0000, index: this.interfaceNumber });
+
+                // 5. Modem Control (Request 0x01) | 0x0303 = Assert DTR & RTS (Ensures ESP32 is NOT held in hardware reset)
+                await this.device.controlTransferOut({ requestType: 'vendor', recipient: 'device', request: 0x01, value: 0x0303, index: this.interfaceNumber });
+
+                await new Promise(r => setTimeout(r, 250)); // Allow ESP32 a moment to stabilize
 
                 this.readLoopActive = true;
                 this.startReadLoop();
                 
-                return this.device.productName || "FTDI VCP";
+                return this.device.productName || "FTDI COM Link";
             }
 
             async startReadLoop() {
@@ -266,6 +257,7 @@
                         const result = await this.device.transferIn(this.endpointIn, 64);
                         
                         if (result.status === 'ok' && result.data.byteLength > 2) {
+                            // Slice explicitly bound to exclude the 2 FTDI modem status bytes
                             const dataBytes = new Uint8Array(
                                 result.data.buffer, 
                                 result.data.byteOffset + 2, 
@@ -273,16 +265,19 @@
                             );
                             
                             buffer += decoder.decode(dataBytes, { stream: true });
+
                             let lines = buffer.split('\n');
-                            buffer = lines.pop(); 
+                            buffer = lines.pop(); // Retain partial lines
 
                             for (let line of lines) {
                                 let trimmed = line.trim();
-                                if (trimmed && this.onDataCallback) this.onDataCallback(trimmed);
+                                if (trimmed && this.onDataCallback) {
+                                    this.onDataCallback(trimmed);
+                                }
                             }
                         }
                     } catch (error) {
-                        printLog("! USB Read Terminated: " + error.message);
+                        console.log("Stream break: ", error);
                         this.readLoopActive = false;
                     }
                 }
@@ -306,13 +301,12 @@
             }
         }
 
-        // --- UI Wiring ---
+        // --- 3. UI Wiring & Logic ---
         const ftdi = new WebUsbFtdiDriver();
         let pollInt;
 
         const ui = {
-            btnConnectFtdi: document.getElementById('btnConnectFtdi'),
-            btnConnectEsp: document.getElementById('btnConnectEsp'),
+            btnConnect: document.getElementById('btnConnect'),
             btnDisconnect: document.getElementById('btnDisconnect'),
             btnSave: document.getElementById('btnSave'),
             btnReboot: document.getElementById('btnReboot'),
@@ -322,14 +316,9 @@
             statusDot: document.getElementById('statusDot')
         };
 
-        function setFtdiOpened(state) {
-            ui.btnConnectFtdi.style.display = state ? 'none' : 'block';
-            ui.btnConnectEsp.style.display = state ? 'block' : 'none';
+        function setConnected(state) {
+            ui.btnConnect.style.display = state ? 'none' : 'block';
             ui.btnDisconnect.style.display = state ? 'block' : 'none';
-        }
-
-        function setEspConnected(state) {
-            ui.btnConnectEsp.style.display = state ? 'none' : 'block';
             ui.btnSave.disabled = !state; 
             ui.btnReboot.disabled = !state; 
             ui.btnTestEmail.disabled = !state;
@@ -338,15 +327,13 @@
             if(state) ui.statusDot.classList.add('connected'); else ui.statusDot.classList.remove('connected');
         }
 
-        ftdi.onDataCallback = (rawStr) => {
-            printLog("<< " + rawStr);
-
+        // Parse cleaned stream tokens
+        ftdi.onDataCallback = (rawJsonString) => {
             try {
-                const data = JSON.parse(rawStr);
+                const data = JSON.parse(rawJsonString);
 
                 if (data.cmd === "connect" && data.ok) {
-                    setEspConnected(true);
-                    printLog("\n[SYSTEM] ESP32 Handshake Successful!");
+                    setConnected(true);
                     ftdi.sendJson({ cmd: "get_settings" }); 
                     ftdi.sendJson({ cmd: "get_log" });
                     if(pollInt) clearInterval(pollInt);
@@ -366,34 +353,31 @@
                     document.getElementById('st_fan').textContent = data.fan_on ? "ON" : "OFF";
                 }
                 
+                if (data.log !== undefined) document.getElementById('maintLogArea').value = data.log || "(no entries)";
                 if (data.cmd === "set_settings" && data.ok) alert("Settings Saved to Station!");
+                if (data.cmd === "test_email" && data.ok) alert("Test email queued successfully.");
 
-            } catch (e) { }
+            } catch (e) {
+                // Skips raw startup strings or fragmented bytes gracefully
+            }
         };
 
-        ui.btnConnectFtdi.addEventListener('click', async () => {
+        ui.btnConnect.addEventListener('click', async () => {
             try {
-                document.getElementById('maintLogArea').value = ""; // Clear log
-                await ftdi.connect();
-                printLog("\n✔ HARDWARE READY. Click '2. CONNECT ESP'");
-                setFtdiOpened(true);
+                const identifier = await ftdi.connect();
+                console.log("Hardware target reached: " + identifier);
+                // Trigger handshake frame immediately following stable execution
+                ftdi.sendJson({ cmd: "connect" }); 
             } catch (err) {
-                printLog("\n[FATAL ERROR]: " + err.message);
+                alert("Connection Failed. Ensure OTG is enabled. Error: " + err.message);
             }
-        });
-
-        ui.btnConnectEsp.addEventListener('click', () => {
-            printLog("\n>> {\"cmd\": \"connect\"}");
-            ftdi.sendJson({ cmd: "connect" }); 
         });
 
         ui.btnDisconnect.addEventListener('click', async () => {
             await ftdi.sendJson({ cmd: "disconnect" });
             await ftdi.disconnect();
             if(pollInt) clearInterval(pollInt); 
-            setEspConnected(false);
-            setFtdiOpened(false);
-            printLog("\n[SYSTEM] Disconnected.");
+            setConnected(false);
         });
 
         ui.btnSave.addEventListener('click', () => {
@@ -401,9 +385,19 @@
             document.querySelectorAll('.nvs-val').forEach(input => { payload[input.id] = input.value; });
             ftdi.sendJson({ cmd: "set_settings", payload: payload });
         });
-        ui.btnReboot.addEventListener('click', () => { if(confirm("Reboot Station?")) ftdi.sendJson({ cmd: "reboot" }); });
-        ui.btnTestEmail.addEventListener('click', () => { ftdi.sendJson({ cmd: "test_email" }); });
-        ui.btnRefreshLog.addEventListener('click', () => { ftdi.sendJson({ cmd: "get_log" }); });
+        
+        ui.btnReboot.addEventListener('click', () => { 
+            if(confirm("Reboot Station?")) ftdi.sendJson({ cmd: "reboot" }); 
+        });
+        
+        ui.btnTestEmail.addEventListener('click', () => { 
+            ftdi.sendJson({ cmd: "test_email" }); 
+        });
+        
+        ui.btnRefreshLog.addEventListener('click', () => { 
+            ftdi.sendJson({ cmd: "get_log" }); 
+        });
+        
         ui.btnAppendLog.addEventListener('click', () => {
             const entry = document.getElementById('newLogEntry').value;
             if(entry) {
