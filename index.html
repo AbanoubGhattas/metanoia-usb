@@ -191,7 +191,7 @@
             el.scrollIntoView({ behavior: 'smooth', inline: 'center' });
         }
 
-        // --- 2. Custom Native WebUSB FTDI Driver (ESP32 Edition) ---
+        // --- 2. Custom Native WebUSB FTDI Driver (ESP32 Fixed Memory Edition) ---
         class WebUsbFtdiDriver {
             constructor() {
                 this.device = null;
@@ -203,7 +203,6 @@
             }
 
             async connect() {
-                // Request FTDI Device specifically
                 this.device = await navigator.usb.requestDevice({
                     filters: [{ vendorId: 0x0403 }]
                 });
@@ -214,7 +213,6 @@
                     await this.device.selectConfiguration(1);
                 }
 
-                // Auto-Detect Endpoints
                 const usbInterface = this.device.configuration.interfaces[0].alternate;
                 this.interfaceNumber = usbInterface.interfaceNumber;
                 
@@ -225,28 +223,26 @@
 
                 await this.device.claimInterface(this.interfaceNumber);
 
-                // FTDI Initialization Sequence
+                // Initialize FTDI
                 await this.device.controlTransferOut({ requestType: 'vendor', recipient: 'device', request: 0x00, value: 0x00, index: this.interfaceNumber }); // Reset
-                await this.device.controlTransferOut({ requestType: 'vendor', recipient: 'device', request: 0x01, value: 0x001A, index: 0x0000 }); // Baud 115200
-                await this.device.controlTransferOut({ requestType: 'vendor', recipient: 'device', request: 0x02, value: 0x0008, index: this.interfaceNumber }); // 8 Data Bits
-                await this.device.controlTransferOut({ requestType: 'vendor', recipient: 'device', request: 0x04, value: 0x0000, index: this.interfaceNumber }); // No Flow Control
+                await this.device.controlTransferOut({ requestType: 'vendor', recipient: 'device', request: 0x01, value: 0x001A, index: 0x0000 }); // 115200 Baud
+                await this.device.controlTransferOut({ requestType: 'vendor', recipient: 'device', request: 0x02, value: 0x0008, index: this.interfaceNumber }); // 8-N-1
+                await this.device.controlTransferOut({ requestType: 'vendor', recipient: 'device', request: 0x04, value: 0x0000, index: this.interfaceNumber }); // Flow Control Off
 
-                // ESP32 DTR/RTS Reset Sequence (Wakes up the ESP32)
-                console.log("Sending ESP32 Reset Sequence...");
-                await this.setModemControl(true, false);  // DTR ON, RTS OFF
-                await new Promise(r => setTimeout(r, 100));
-                await this.setModemControl(false, true);  // DTR OFF, RTS ON
-                await new Promise(r => setTimeout(r, 100));
-                await this.setModemControl(false, false); // DTR OFF, RTS OFF (Boot Mode)
-                await new Promise(r => setTimeout(r, 100)); // Wait for boot
+                // Precise Cross-Coupled Transistor Sequence to Trigger ESP32 Boot
+                await this.setModemControl(true, false);  // DTR Low, RTS High -> Asserts Reset Pin
+                await new Promise(r => setTimeout(r, 150));
+                await this.setModemControl(false, true);  // DTR High, RTS Low -> Releases Reset, Sets Boot Pin
+                await new Promise(r => setTimeout(r, 150));
+                await this.setModemControl(false, false); // Both released -> Executes application
+                await new Promise(r => setTimeout(r, 400)); // Allow ESP32 crystal oscillation to stabilize
 
                 this.readLoopActive = true;
                 this.startReadLoop();
                 
-                return this.device.productName || "FTDI UART";
+                return this.device.productName || "FTDI COM Link";
             }
 
-            // Controls the hardware pins required to reboot the ESP32
             async setModemControl(dtr, rts) {
                 let value = 0x0000;
                 if (dtr) value |= 0x0101; else value |= 0x0100;
@@ -267,21 +263,27 @@
                         const result = await this.device.transferIn(this.endpointIn, 64);
                         
                         if (result.status === 'ok' && result.data.byteLength > 2) {
-                            // Strip the 2 FTDI modem status bytes
-                            const dataBytes = new Uint8Array(result.data.buffer, 2);
+                            // FIX: Slice explicitly bound to byteOffset and packet byteLength to exclude garbage unallocated system memory
+                            const dataBytes = new Uint8Array(
+                                result.data.buffer, 
+                                result.data.byteOffset + 2, 
+                                result.data.byteLength - 2
+                            );
+                            
                             buffer += decoder.decode(dataBytes, { stream: true });
 
                             let lines = buffer.split('\n');
-                            buffer = lines.pop(); // Keep partial line in buffer
+                            buffer = lines.pop(); // Retain partial lines
 
                             for (let line of lines) {
-                                if (line.trim() && this.onDataCallback) {
-                                    this.onDataCallback(line.trim());
+                                let trimmed = line.trim();
+                                if (trimmed && this.onDataCallback) {
+                                    this.onDataCallback(trimmed);
                                 }
                             }
                         }
                     } catch (error) {
-                        console.log("USB Read Terminated or Error: ", error);
+                        console.log("Stream break: ", error);
                         this.readLoopActive = false;
                     }
                 }
@@ -331,22 +333,19 @@
             if(state) ui.statusDot.classList.add('connected'); else ui.statusDot.classList.remove('connected');
         }
 
-        // Handle incoming JSON
+        // Parse cleaned stream tokens
         ftdi.onDataCallback = (rawJsonString) => {
             try {
                 const data = JSON.parse(rawJsonString);
 
-                // Handshake & Initial Poll
                 if (data.cmd === "connect" && data.ok) {
                     setConnected(true);
                     ftdi.sendJson({ cmd: "get_settings" }); 
                     ftdi.sendJson({ cmd: "get_log" });
-                    // Prevent multiple intervals if already connected
                     if(pollInt) clearInterval(pollInt);
                     pollInt = setInterval(() => ftdi.sendJson({ cmd: "status" }), 2000);
                 }
                 
-                // Map JSON directly to inputs
                 if (data.cmd === "get_settings" || data.node_name) {
                     document.querySelectorAll('.nvs-val').forEach(input => { 
                         if (data[input.id] !== undefined) input.value = data[input.id]; 
@@ -354,31 +353,29 @@
                     document.getElementById('st_node').textContent = data.node_name || "--";
                 }
                 
-                // Live Stats
                 if (data.bat_v !== undefined) {
                     document.getElementById('st_bat').textContent = parseFloat(data.bat_v).toFixed(2) + " V";
                     document.getElementById('st_temp').textContent = parseFloat(data.chip_temp).toFixed(1) + "°C";
                     document.getElementById('st_fan').textContent = data.fan_on ? "ON" : "OFF";
                 }
                 
-                // Actions & Callbacks
                 if (data.log !== undefined) document.getElementById('maintLogArea').value = data.log || "(no entries)";
                 if (data.cmd === "set_settings" && data.ok) alert("Settings Saved to Station!");
                 if (data.cmd === "test_email" && data.ok) alert("Test email queued successfully.");
 
             } catch (e) {
-                // Ignore non-JSON serial noise (e.g., ESP32 boot logs)
+                // Skips raw startup strings or fragmented bytes gracefully
             }
         };
 
-        // Connect / Disconnect Buttons
         ui.btnConnect.addEventListener('click', async () => {
             try {
-                await ftdi.connect();
-                // Send handshake immediately after the DTR reset sequence finishes
+                const identifier = await ftdi.connect();
+                console.log("Hardware target reached: " + identifier);
+                // Trigger handshake frame immediately following stable execution
                 ftdi.sendJson({ cmd: "connect" }); 
             } catch (err) {
-                alert("Connection Failed. Ensure OTG is enabled in Android settings. Error: " + err.message);
+                alert("Connection Failed. If physical connection exists, verify OTG settings. Error: " + err.message);
             }
         });
 
@@ -389,7 +386,6 @@
             setConnected(false);
         });
 
-        // Global Action Buttons
         ui.btnSave.addEventListener('click', () => {
             let payload = {}; 
             document.querySelectorAll('.nvs-val').forEach(input => { payload[input.id] = input.value; });
